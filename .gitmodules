@@ -2,3 +2,6 @@
 	url = https://github.com/lsst/lsst-texmf.git
 	path = lsst-texmf
 	branch = refs/heads/main
+[submodule "images"]
+	path = images
+	url = git@github.com:lsst-dm/images.git
