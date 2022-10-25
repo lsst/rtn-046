@@ -5,11 +5,12 @@ This document defines the mission, goals and objectives, organization and respon
 
 \subsection{Mission Statement}
 \quote{  Maintain, improve and operate a suite of Vera C. Rubin data management services to produce
-and serve to the community high-quality data products from the Legacy Surevey of Space and Time.
+and serve to the community high-quality data products from the Legacy Survey of Space and Time.
 }
 
 
 \subsection{Goals and Objectives}
+These are similar to our construction goals outlined in \citeds{LDM-294}.
 Rubin Data Management Operations will:
 \begin{itemize}
 \item Produce the data products as outlined in \citeds{LSE-61}
@@ -17,9 +18,21 @@ Rubin Data Management Operations will:
 \item Maintain and improve data access mechanisms.
 \item Maintain and improve data abstraction mechanisms.
 \item Assess current and operations-era technologies for use in providing engineered solutions for \VRO.
-\item Maintain apropriate cybersecurity measures throughout \VRO and especially on external facing services.
+\item Maintain appropriate cybersecurity measures throughout \VRO and especially on external facing services.
 \item Document the operational procedures associated with using and maintaining DM capabilities.
 \item Evaluate, select, recruit, hire/contract and direct permanent staff, contract, and in-kind resources in Rubin and from partner organizations participating in DM initiatives.
 
 \end{itemize}
 
+
+The goals in selecting and, where necessary, developing Rubin software solutions are:
+
+\begin{itemize}
+\item   We prefer to acquire and configure existing, off-the-shelf, solutions. Where no satisfactory off-the-shelf solutions are available, we develop the software and hardware systems necessary to meet our objectives.
+This extends into maintenance where we will continue to probe choices and may replace custom systems with off-the-shelf solutions where appropriate.
+\item The software architecture is actively managed at the subsystem level. A well engineered and cleanly designed codebase is less buggy, more maintainable, and makes developers who work on it more productive. We continue to follow and maintain the developer guide\footnote{\url{developer.lsst.io}}.
+\item  Other than when prohibited by licensing, security, or other similar considerations, all newly developed source code, and in particular that pertaining to scientific algorithms, is public.
+Our primary goals in publicizing the code are to simplify reproducibility of LSST data products and to provide insight into algorithms used.
+Achieving these goals requires that the software must be properly documented.
+\item Background decision material on choices made will be documented in technical notes with "DMTN", "RTN" or similar series handles. (see \url{lsst.io})
+\end{itemize}
