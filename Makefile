@@ -46,3 +46,8 @@ meta.tex: Makefile .FORCE
 	printf '\\newcommand{\\lsstDocNum}{$(DOCNUMBER)}\n' >>$@
 	printf '\\newcommand{\\vcsRevision}{$(GITVERSION)$(GITDIRTY)}\n' >>$@
 	printf '\\newcommand{\\vcsDate}{$(GITDATE)}\n' >>$@
+
+
+tables:
+	makeTablesFromGoogle.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY Products\!A1:H 
+
