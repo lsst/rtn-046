@@ -51,3 +51,7 @@ meta.tex: Makefile .FORCE
 tables:
 	makeTablesFromGoogle.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY Products\!A1:H 
 
+tree:
+	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY Products\!A1:H --land=1
+	pdflatex ProductTreeLand.tex
+
