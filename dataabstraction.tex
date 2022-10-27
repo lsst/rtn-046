@@ -1,0 +1,36 @@
+\subsection{Data Abstraction } \label{sec:dataabstraction}
+
+Underpinning Data Making and Data Serving is out abstraction of data and services.
+This includes middleware such as  butler and batch production systems etc.
+But also Prompt Processing execution and Data engineering.
+It is crucial for our system portability to maintain the abstraction layer.
+
+A comprehensive list is given in \secref{sec:products}.
+
+Some of these require a little more discussion here.
+
+\subsubsection{Data Engineering}
+
+\begin{itemize}
+\item Support the metadata translation infrastructure (astro\_metadata\_translator) and monitor correctness of FITS headers.
+\item Advise on file formats and file metadata for all systems writing files that are to be archived.
+\item Support the Felis system for specifying schemas.
+\item Define the data models for everything in the consolidated database. (“global data model” schema?)
+\item Write and support code that populates the consolidated database (for example, code that analyzes the EFD and creates the “exposure” and “visit” tables).
+\item Gregory Dubois-Felsmann is product owner (“Data Scientist”)
+\item Staffing: tiny in construction. 0.5 FTE in ops + fractional GPDF.
+
+\end{itemize}
+
+
+\subsubsection{Middleware Assumptions}
+As can be seen in the product list there are a lot of elements to Middleware.
+A few assumptions are made.
+\begin{itemize}
+\item Assumes butler/Rucio integration is entirely handled by the infrastructure team.
+\item Assumes database administration is done by the infrastructure team.
+\item Staffing: 0.5 Andy S; 0.5 new NateP; NateL 0.25; Matthias 0.5; MichelleG 0.5; Kowalik 0.25; at least 0.25 PanDA ongoing person for ctrl\_bps\_panda.
+
+\end{itemize}
+
+

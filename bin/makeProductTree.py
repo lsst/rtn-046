@@ -113,7 +113,7 @@ def constructTree(values):
         name= fixTex(line[2])
         notes=line[3]
         if len(line) == 8:
-            notes= f"{notes}:{line[7]}"
+            notes= f"{notes}:{fixTex(line[7])}"
         prod = Product(id, name, pid, notes, line[5], line[6], line[4])
         if (count == 3):  # root node
             print(f"{id} is root")
@@ -920,7 +920,7 @@ def theader(tout):
 """.format(__file__), file=tout)
     print(r"""\scriptsize
 \begin{longtable}{
-p{0.15\textwidth}   |p{0.15\textwidth}|p{0.15\textwidth} |p{0.22\textwidth}|}
+p{0.1\textwidth}   |p{0.15\textwidth}|p{0.15\textwidth} |p{0.6\textwidth}|}
 \multicolumn{1}{c|}{\textbf{Product}} &
 \multicolumn{1}{c|}{\textbf{Manager}} &
 \multicolumn{1}{c|}{\textbf{Owner}} &
@@ -933,7 +933,7 @@ p{0.15\textwidth}   |p{0.15\textwidth}|p{0.15\textwidth} |p{0.22\textwidth}|}
 def header(fout, pwidth, pheight):
     print(r"""%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Document:      DM  product tree
+% Document:      DM  operations product tree
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass{article}
@@ -994,7 +994,7 @@ args = parser.parse_args()
 outdepth=args.depth
 land=args.land
 if (land==None):
-    print('Output portraint')
+    print('Output portrait')
 else:
     print('Output landscape ', land)
 sheetId=args.id

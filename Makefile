@@ -48,7 +48,7 @@ meta.tex: Makefile .FORCE
 	printf '\\newcommand{\\vcsDate}{$(GITDATE)}\n' >>$@
 
 
-tables:
+tables: #not needed product tree does it
 	makeTablesFromGoogle.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY Products\!A1:H 
 
 tree:
