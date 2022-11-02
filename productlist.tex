@@ -10,43 +10,71 @@ p{0.1\textwidth}   |p{0.15\textwidth}|p{0.15\textwidth} |p{0.6\textwidth}|}
 \multicolumn{1}{c|}{\textbf{Manager}} &
 \multicolumn{1}{c|}{\textbf{Owner}} &
 \multicolumn{1}{c}{\textbf{Notes}}\\ \hline
-{\textbf{DMops}} & William O'Mullane & Leanne Guy  & Data Management Operations \\ \hline
-{\textbf{Algorithims}} & Yusra AlSayyad & Colin Slater & Algorithims and Pipelines \\ \hline
-{\textbf{Campaigns}} & Yusra AlSayyad & Eric Charles & Campaign Management \\ \hline
-{\textbf{Data Abs.}} & Tim Jenness & ? & Data Abstraction \\ \hline
-{\textbf{Data Eng.}} & Tim Jenness & Gregory Dubois Fehlsmann & Data Engineering:metadata translation infrastructure, file formats, data model support  \\ \hline
-{\textbf{Middlware}} & Tim Jenness & Jim Bosch  & Middlware \\ \hline
-{\textbf{Butler}} & Tim Jenness & Jim Bosch  & Butler:(inc, utils, resources, sphgeom [or whatever region library we use]) for abstracting the data access; pipe\_base and pex\_config for defining the interface between pipeline implementation and the algorithmic code; \\ \hline
-{\textbf{Exec. Soft.}} & Michelle Gower & Jim Chiang? & Execution Software:software that runs the pipelines (ctrl\_mpexec, ctrl\_bps), and the interfaces to workflow execution systems (eg ctrl\_bps\_panda) \\ \hline
-{\textbf{OCPS}} & Tim Jenness & Tiago Ribiero & Observatory Contolled Processing Sysytem Framework:The interface between observing scripts and data processing. Could be triggered by data arrival \\ \hline
-{\textbf{PP Exec}} & Tim Jenness & Hsin Fang Chiang? & Promp Processing Execution Framework:This system is poorly defined at present but has many features that naturally place it close to the execution middleware. \\ \hline
-{\textbf{U.Batch Abs.}} & Tim Jenness & Gregory Dubois Fehlsmann & User Batch abstraction:Support ability for PipelineTask to call arbitrary user binaries (\citeds{DMTN-223}) \\ \hline
-{\textbf{Data Serv}} & Frossie Economou & Gregory Dubois Fehlsmann & Data Services \\ \hline
-{\textbf{Dev. Sup}} & Jonathan Sick & Yusra AlSayyad & Developer Infrastructure Support \\ \hline
-{\textbf{Chatbots}} & Jonathan Sick & Yusra AlSayyad & Chatops bots (create project etc) \\ \hline
-{\textbf{Dev. Docs}} & Jonathan Sick & Yusra AlSayyad & Documentation system \\ \hline
-{\textbf{QSERV}} & Fritz Mueller & Gregory Dubois Fehlsmann & QSERV \\ \hline
-{\textbf{RSP}} & Frossie Economou & Gregory Dubois Fehlsmann & Data Access / RSP Apps \\ \hline
-{\textbf{Notebook}} & Frossie Economou & Gregory Dubois Fehlsmann & Notebook \\ \hline
-{\textbf{Portal}} & Frossie Economou & Gregory Dubois Fehlsmann & Portal \\ \hline
-{\textbf{API}} & Frossie Economou & Gregory Dubois Fehlsmann & API (inc all VO services) \\ \hline
-{\textbf{Square One}} & Frossie Economou & Gregory Dubois Fehlsmann & Square One \\ \hline
-{\textbf{U.Sup Systems}} & Frossie Economou & Leanne Guy  & User support systems (helpdesk, community.lsst.org):helpdesk, community.lsst.org \\ \hline
-{\textbf{Serv. Infra}} & Adam Thornton & ? & Services Infrastructure \\ \hline
-{\textbf{Auth}} & Russ Albury & ? & Authorization \\ \hline
-{\textbf{CDF Admin}} & Adam Thornton & ? & CloudDF phalanx clusters administration (data.lsst.cloud and staging envs):data.lsst.cloud and staging envs \\ \hline
-{\textbf{Data Serv. Arch.}} & Angelo Fausti & ? & Data Services architecture \\ \hline
-{\textbf{Phalanx}} & Russ Albury & ? & K8s deployment environment (phalanx) \\ \hline
-{\textbf{Roundtable}} & Frossie Economou & ? & Microservices cluster administration  \\ \hline
-{\textbf{Secrets Mgt.}} & Russ Albury & ? & Secrets Management \\ \hline
-{\textbf{Time Seri Infra}} & Frossie Economou & ? & Time-series infrastructure \\ \hline
-{\textbf{Scalars}} & Frossie Economou & ? & Scalar curation (inc EFD) \\ \hline
-{\textbf{TM Gateway}} & Frossie Economou & ? & Telemetry gateway \\ \hline
-{\textbf{Summit}} & Crisitán Silva & Chuck Claver? & Chile Summit Infrastructure \\ \hline
-{\textbf{Com. Cluster}} & Crisitán Silva & Robert Lupton & Commissioning Cluster \\ \hline
-{\textbf{USDF}} & Richard Dubois & William O'Mullane & US Data Facility \\ \hline
-{\textbf{Prompt Deploy}} & Richard Dubois & Eric Bellm & Prompt Production Deployment \\ \hline
-{\textbf{Manage Repos }} & Richard Dubois & ? & Butler Repo Management \\ \hline
-{\textbf{U.Batch}} & Richard Dubois & Gregory Dubois Fehlsmann & User Batch:\citeds{DMTN-223} \\ \hline
+{\textbf{DM Ops}} & Wil O'Mullane &  & Data Management (Ops) \\ \hline
+{\textbf{Data Abstraction}} & Tim Jenness &  & Data Abstraction \\ \hline
+{\textbf{Data Engineering}} & Gregory Dubois Felsmann &  & Data Engineering \\ \hline
+{\textbf{Felis}} & TBD &  & Felis \\ \hline
+{\textbf{Metadata}} & TBD &  & Metadata \\ \hline
+{\textbf{Middleware}} & Tim Jenness &  & Middleware \\ \hline
+{\textbf{BPS}} & TBD &  & BPS \\ \hline
+{\textbf{Butler}} & Tim Jenness & Y (JIm B) & Butler \\ \hline
+{\textbf{Control Interface}} & TBD &  & Control Interface \\ \hline
+{\textbf{ctrl\_bps}} & TBD &  & ctrl\_bps \\ \hline
+{\textbf{ctrl\_mpexec}} & TBD &  & ctrl\_mpexec \\ \hline
+{\textbf{user batch envelope}} & TBD &  & user batch envelope \\ \hline
+{\textbf{Pipeline interfaces}} & TBD &  & Pipeline interfaces \\ \hline
+{\textbf{pex\_config}} & TBD &  & pex\_config \\ \hline
+{\textbf{pipe\_base}} & TBD &  & pipe\_base \\ \hline
+{\textbf{Single-site Exec}} & TBD &  & Single-site Exec \\ \hline
+{\textbf{OCPS}} & KT Lim ? &  & Observatory Controlled Processing System \\ \hline
+{\textbf{Prompt f/ w}} & TBD &  & Prompt forwarder \\ \hline
+{\textbf{Data Facilities}} & Richard Dubois &  & Data Facilities \\ \hline
+{\textbf{Data Curation}} & TBD &  & Data Curation \\ \hline
+{\textbf{Data Backbone}} & TBD &  & Data Backbone \\ \hline
+{\textbf{Backups}} & TBD &  & Backups \\ \hline
+{\textbf{Bulk Download}} & TBD &  & Bulk Download \\ \hline
+{\textbf{Consolidated DB}} & TBD &  & Consolidated DB \\ \hline
+{\textbf{Butler repos}} & TBD &  & Butler repos \\ \hline
+{\textbf{Rucio}} & TBD &  & Rucio \\ \hline
+{\textbf{Infrastructures}} & TBD &  & Infrastructures \\ \hline
+{\textbf{CDF}} & Frossie Economou &  & CDF \\ \hline
+{\textbf{FRDF}} & Fabio Hernandez &  & FRDF \\ \hline
+{\textbf{TDF}} & Cristián Silva &  & TDF \\ \hline
+{\textbf{UKDF}} & George Beckett &  & UKDF \\ \hline
+{\textbf{USDF}} & TBD &  & USDF \\ \hline
+{\textbf{Multi-site \&  User Exec}} & TBD &  & Multi-site \&  User Exec \\ \hline
+{\textbf{PanDA}} & TBD &  & PanDA \\ \hline
+{\textbf{User Batch}} & TBD &  & User Batch \\ \hline
+{\textbf{Data Production}} & Yusra AlSayyad &  & Data Production \\ \hline
+{\textbf{Campaign Management}} & ? & Y (N/ A) & Campaign Management \\ \hline
+{\textbf{Algorithms \&  Pipelines}} & Yusra AlSayyad & ? (Jim Bosch) & Algorithms \&  Pipelines:In ops our construction POs (JimB+EricB) become our group leads, so PO prob not necessary. \\ \hline
+{\textbf{Data Services}} & Frossie Economou &  & Data Services \\ \hline
+{\textbf{Complex. DB}} & Fritz Mueller & Y (Colin) & Complex Database Support:Should this be complex Databases or somethign ? Qserv under \\ \hline
+{\textbf{Big Databases}} & Fritz Mueller &  & Big Databases \\ \hline
+{\textbf{PromptDV}} & TBD &  & Prompt Products DB \\ \hline
+{\textbf{Qserv}} & Fritz Mueller &  & Qserv \\ \hline
+{\textbf{User Databases}} & TBD &  & User Databases \\ \hline
+{\textbf{RSP Portal}} & TBD &  & RSP Portal \\ \hline
+{\textbf{SQuaRE}} & TBD &  & SQuaRE \\ \hline
+{\textbf{Doc Services}} & TBD &  & Doc Services \\ \hline
+{\textbf{Documentation standards}} & TBD &  & Documentation standards \\ \hline
+{\textbf{LtD}} & TBD &  & LtD \\ \hline
+{\textbf{Templating}} & TBD &  & Templating \\ \hline
+{\textbf{Phalanx}} & TBD &  & Phalanx \\ \hline
+{\textbf{Authorisation}} & TBD &  & Authorisation \\ \hline
+{\textbf{Reliability Engineering}} & TBD &  & Reliability Engineering \\ \hline
+{\textbf{Secrets}} & TBD &  & Secrets \\ \hline
+{\textbf{RSP}} & TBD &  & RSP \\ \hline
+{\textbf{APIs}} &  & Y (GPDF) & APIs:IVOA and non-VO Apis \\ \hline
+{\textbf{data.lsst.cloud}} & TBD &  & data.lsst.cloud \\ \hline
+{\textbf{Authentication}} &  &  & Authentication:and security engineering \\ \hline
+{\textbf{Notebook}} &  & Y (KSK) & Notebook \\ \hline
+{\textbf{Portal}} &  & Y (GPDF) & Portal \\ \hline
+{\textbf{Square One}} & TBD &  & Square One \\ \hline
+{\textbf{User Support}} &  &  & User Support:clo service and helpdesk \\ \hline
+{\textbf{Sasquatch}} & TBD &  & Sasquatch \\ \hline
+{\textbf{EFD}} & TBD &  & EFD \\ \hline
+{\textbf{Metrics}} & TBD &  & Metrics \\ \hline
+{\textbf{Telemetry Gateway}} & TBD &  & Telemetry Gateway \\ \hline
 \end{longtable}
 \normalsize
