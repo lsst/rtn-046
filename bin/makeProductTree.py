@@ -89,33 +89,42 @@ def get_sheet(sheet_id, range):
 
 
 class Product(object):
-    def __init__(self, id, name, parent, desc, manager, owner, team):
+    def __init__(self, id, name, parent, desc, manager, owner, type):
         self.id = id
         self.name = name
         self.parent = parent
         self.desc = desc
         self.manager = manager
         self.owner = owner
-        self.team = team
+        self.type = type
 
 
 def constructTree(values):
     "scan the values file and construct  a tree structure"
+    # assume root is after header on line 1
+    skip_to = 2
     count = 0
     ptree = Tree()
     for line in values:
         count = count + 1
-        if count <= 2:
+        if count < skip_to:
             continue
         print(line)
         id = fixIdTex(line[0]) #make an id from the name
         pid= fixIdTex(line[1]) #use the same formaula on the parent name then we are good
         name= fixTex(line[2])
-        notes=line[3]
+        type = line[4]
+        lead = "TBD"
+        if (len(line) >= 6):
+            lead = fixTex(line[5])
+        po = ""
+        if (len(line) >= 7):
+            po = fixTex(line[6])
+        notes=fixTex(line[3])
         if len(line) == 8:
             notes= f"{notes}:{fixTex(line[7])}"
-        prod = Product(id, name, pid, notes, line[5], line[6], line[4])
-        if (count == 3):  # root node
+        prod = Product(id, name, pid, notes, lead, po, type)
+        if count == skip_to:  # root node
             print(f"{id} is root")
             ptree.create_node(prod.id, prod.id, data=prod)
         else:
@@ -183,12 +192,12 @@ def outputTexTable(tout, ptree):
     return
 
 
-def outputTeam(fout,prod):
+def outputType(fout,prod):
     print("] {", file=fout, end='')
     print(r"\textbf{" + prod.name + "} ", file=fout, end='')
     print("};", file=fout)
-    if prod.team != "":
-        print(r"\node [below right] at ({p.id}.north west) {{\small \color{{blue}}{p.team}}} ;".format(p=prod), file=fout)
+    if prod.type != "":
+        print(r"\node [below right] at ({p.id}.north west) {{\small \color{{blue}}{p.type}}} ;".format(p=prod), file=fout)
     return
 
 def parent(node):
@@ -727,7 +736,7 @@ def doRow(fout,ptree,children,nodes,depth, childcount, goingDown):
               placed=1
            #print(r"mydepth={md} depth={dp} {p.id} right={d}mm parent={p.parent} prevparent={pr.parent}"
            #         " prev={pr.id}".format(md=ptree.depth(prod.id),dp=depth,p=prod,d=dist, pr=prev))
-           outputTeam(fout,prod)
+           outputType(fout,prod)
            prev = prod
     return ccount
 
@@ -762,7 +771,7 @@ def outputTexTreeP(fout, ptree, width, sib, full):
                    print(r"\node ({p.id}) [pbox, ".format(p=prod), file=fout)
                    if (sib):
                       print("right={d}cm of {p.id}".format(d=width,p=sib), file=fout, end='')
-                   outputTeam(fout,prod)
+                   outputType(fout,prod)
 
             else:
                 print(r"\node ({p.id}) [pbox,".format(p=prod), file=fout, end='')
@@ -798,7 +807,7 @@ def outputTexTreeP(fout, ptree, width, sib, full):
                     # benetih the sibling
                     dist = gap
                     print("below={}pt of {}".format(dist, prev.id), file=fout, end='')
-                outputTeam(fout,prod)
+                outputType(fout,prod)
                 print(r" \draw[pline] ({p.parent}.east) -| ++(0.4,0) |- ({p.id}.west); ".format(p=prod), file=fout)
             prev = prod
     return count
