@@ -35,7 +35,7 @@ jobs:
         run: |
           echo $CLIENT >> client_secret.json
           ./decrypt_secret.sh
-          docker run --rm -v `pwd`:/workspace -w /workspace lsstsqre/lsst-texmf:latest sh -c 'make'
+          docker run --rm -v `pwd`:/workspace -w /workspace lsstsqre/lsst-texmf:latest sh -c 'make gdepend tree RTN-046.pdf'
 
       - name: Landing page upload
         if: ${{ github.event_name == 'push' }}
@@ -43,4 +43,4 @@ jobs:
           LTD_PASSWORD: ${{ secrets.LTD_PASSWORD }}
           LTD_USERNAME: ${{ secrets.LTD_USERNAME }}
         run: |
-          lander --upload --pdf RTN-046.pdf --lsstdoc RTN-046.tex --ltd-product rtn-046
+          lander --upload --pdf RTN-046.pdf --lsstdoc RTN-046.tex --extra-download ProductTreeLand.pdf --extra-download ProductTree.pdf --ltd-product rtn-046
