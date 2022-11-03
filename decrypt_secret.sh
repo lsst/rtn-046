@@ -1,5 +1,5 @@
 #!/bin/sh
-
+# encrupted with  gpg -c token.pickle
 # Decrypt the file
 # --batch to prevent interactive command
 # --yes to assume "yes" for questions

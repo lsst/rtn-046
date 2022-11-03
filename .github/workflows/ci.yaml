@@ -30,7 +30,7 @@ jobs:
 
       - name: TeX build
          env:
-          CLIENT: ${{ secrets.SIZING_MODEL_ACCESS }}
+          CLIENT: ${{ secrets.TREE_ACCESS }}
           TOKEN_PASSPHRASE: ${{ secrets.TOKEN_PASSPHRASE }}
         run: |
           echo $CLIENT >> client_secret.json
