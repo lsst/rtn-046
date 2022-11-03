@@ -20,6 +20,9 @@ $(DOCNAME).pdf: $(tex) meta.tex local.bib acronyms.tex
 #	xelatex $(DOCNAME)
 # For glossary uncomment the 2 lines above
 
+gdepend:
+	pip install --upgrade pip
+	pip install --upgrade -r requirements.txt
 
 # Acronym tool allows for selection of acronyms based on tags - you may want more than DM
 acronyms.tex: $(tex) myacronyms.txt
