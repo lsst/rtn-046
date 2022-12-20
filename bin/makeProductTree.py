@@ -464,24 +464,24 @@ def outputLandR(fout, ptree, pid):
             sprevw = slice(prevw, sdepth) # Slice previus subtree that can acomodated with the actual one
             nleaves = len(sprevw.leaves())
             #nleaves = land_red_leaves(sprevw)
-            #if prod.id=='lsstobs':
+            btype='p'
+            if prod.type and len(prod.type)>0:
+                btype=prod.type[0].lower()
             #    print(nleaves, prod.name)
             #print('Previous tree:\n', sprevw)
             nl = land_red_leaves(sprevw)
             nleaves = nl
             dist = (nleaves -1) * 109 + gap
-            print(r"\node ({p.id}) "
-                 r"[pbox, right={d}pt of {s.id}]{{\textbf{{{p.name}}}}};".format(p=prod,s=sib,d=dist),
-                 file=fout)
+            print(rf"\node ({prod.id}) "
+                 rf"[{btype}box, right={dist}pt of {sib.id}]{{\textbf{{{prod.name}}}}};",file=fout)
         else:
             if (pid):
-                print(r"\node ({p.id}) "
-                     r"[pbox, below=15mm of {pid}]{{\textbf{{{p.name}}}}};".format(p=prod,pid=pid),
+                print(rf"\node ({prod.id}) "
+                     rf"[{btype}box, below=15mm of {pid}]{{\textbf{{{prod.name}}}}};",
                      file=fout)
             else:
-                print(r"\node ({p.id}) "
-                     r"[pbox]{{\textbf{{{p.name}}}}};".format(p=prod),
-                     file=fout)
+                print(fr"\node ({p.id}) "
+                     fr"[{btype}box]{{\textbf{{{prod.name}}}}};", file=fout)
         sib = prod
         prevw = stree
         if (sdepth > 0):
@@ -761,6 +761,9 @@ def outputTexTreeP(fout, ptree, width, sib, full):
         count = count + 1
         # print("{} Product: {p.id} name: {p.name}"
         #       " parent: {p.parent}".format(depth, p=prod))
+        bcode = 'p'
+        if prod.type and len(prod.type) > 1:
+            bcode = prod.type[0].lower()
         if (depth <= outdepth):
             if (count == 1 ):  # root node
                 if full ==1:
@@ -768,13 +771,13 @@ def outputTexTreeP(fout, ptree, width, sib, full):
                       r"[wbbox]{{\textbf{{{p.name}}}}};".format(p=prod),
                       file=fout)
                 else: #some sub tree
-                   print(r"\node ({p.id}) [pbox, ".format(p=prod), file=fout)
+                   print(fr"\node ({prod.id}) [{bcode}box, ", file=fout)
                    if (sib):
-                      print("right={d}cm of {p.id}".format(d=width,p=sib), file=fout, end='')
+                      print(f"right={width}cm of {sib.id}", file=fout, end='')
                    outputType(fout,prod)
 
             else:
-                print(r"\node ({p.id}) [pbox,".format(p=prod), file=fout, end='')
+                print(fr"\node ({prod.id}) [{bcode}box,", file=fout, end='')
                 if (prev.parent != prod.parent):  # first child to the right if portrait left if landscape
                     found = 0
                     scount = count - 1
@@ -965,6 +968,21 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 
     print(r"\tikzstyle{pbox}=[rectangle, rounded corners=3pt, draw=black, top"
           " color=yellow!50!white, bottom color=white, very thick,"
+          " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
+          "pt, text centered, text width=35mm]", file=fout)
+
+    print(r"\tikzstyle{abox}=[rectangle, rounded corners=3pt, draw=black, top"
+          " color=green!50!white, bottom color=white, very thick,"
+          " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
+          "pt, text centered, text width=35mm]", file=fout)
+
+    print(r"\tikzstyle{tbox}=[rectangle, rounded corners=3pt, draw=black, top"
+          " color=blue!50!white, bottom color=white, very thick,"
+          " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
+          "pt, text centered, text width=35mm]", file=fout)
+
+    print(r"\tikzstyle{gbox}=[rectangle, rounded corners=3pt, draw=black, top"
+          " color=cyan!50!white, bottom color=white, very thick,"
           " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
           "pt, text centered, text width=35mm]", file=fout)
 
