@@ -928,7 +928,6 @@ def theader(tout):
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 """.format(__file__), file=tout)
     print(r"""\scriptsize
-\hline
 \begin{longtable} {
 |p{0.2\textwidth}   |p{0.15\textwidth}|p{0.15\textwidth} |p{0.4\textwidth}|}
 \multicolumn{1}{c|}{\textbf{Product}} &
