@@ -928,12 +928,13 @@ def theader(tout):
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 """.format(__file__), file=tout)
     print(r"""\scriptsize
-\begin{longtable}{
-p{0.1\textwidth}   |p{0.15\textwidth}|p{0.15\textwidth} |p{0.6\textwidth}|}
+\hline
+\begin{longtable} {
+|p{0.2\textwidth}   |p{0.15\textwidth}|p{0.15\textwidth} |p{0.4\textwidth}|}
 \multicolumn{1}{c|}{\textbf{Product}} &
 \multicolumn{1}{c|}{\textbf{Manager}} &
 \multicolumn{1}{c|}{\textbf{Owner}} &
-\multicolumn{1}{c}{\textbf{Notes}}\\ \hline""",
+\multicolumn{1}{c}{\textbf{Notes}}|\\ \hline""",
           file=tout)
 
     return
