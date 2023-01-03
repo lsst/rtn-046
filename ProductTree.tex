@@ -8,7 +8,7 @@
 \usepackage{tikz,hyperref,amsmath}
 \usetikzlibrary{positioning,arrows,shapes,decorations.shapes,shapes.arrows}
 \usetikzlibrary{backgrounds,calc}
-\usepackage[paperwidth=20.8cm,paperheight=47.300000000000004cm,
+\usepackage[paperwidth=26.0cm,paperheight=72.26cm,
 left=-2mm,top=3mm,bottom=0mm,right=0mm,
 noheadfoot,marginparwidth=0pt,includemp=false,
 textwidth=30cm,textheight=50mm]{geometry}
@@ -51,10 +51,25 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-ctrl) [pbox,below=4pt of 3-butler] {\textbf{Control Interface} };
 \node [below right] at (3-ctrl.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Middle.east) -| ++(0.4,0) |- (3-ctrl.west); 
-\node (3-spinter) [pbox,below=4pt of 3-ctrl] {\textbf{Pipeline interfaces} };
+\node (4-cbps) [pbox,right=15mm of 3-ctrl] {\textbf{ctrl\_bps} };
+\node [below right] at (4-cbps.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-ctrl.east) -| ++(0.4,0) |- (4-cbps.west); 
+\node (4-cmp) [pbox,below=4pt of 4-cbps] {\textbf{ctrl\_mpexec} };
+\node [below right] at (4-cmp.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-ctrl.east) -| ++(0.4,0) |- (4-cmp.west); 
+\node (4-ubat) [pbox,below=4pt of 4-cmp] {\textbf{user batch envelope} };
+\node [below right] at (4-ubat.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-ctrl.east) -| ++(0.4,0) |- (4-ubat.west); 
+\node (3-spinter) [pbox,below=86pt of 3-ctrl] {\textbf{Pipeline interfaces} };
 \node [below right] at (3-spinter.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Middle.east) -| ++(0.4,0) |- (3-spinter.west); 
-\node (2-SingleExec) [pbox,below=127pt of 2-Middle] {\textbf{Single-site Exec} };
+\node (4-pex) [pbox,right=15mm of 3-spinter] {\textbf{pex\_config} };
+\node [below right] at (4-pex.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-spinter.east) -| ++(0.4,0) |- (4-pex.west); 
+\node (4-pip) [pbox,below=4pt of 4-pex] {\textbf{pipe\_base} };
+\node [below right] at (4-pip.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-spinter.east) -| ++(0.4,0) |- (4-pip.west); 
+\node (2-SingleExec) [pbox,below=250pt of 2-Middle] {\textbf{Single-site Exec} };
 \node [below right] at (2-SingleExec.north west) {\small \color{blue}Product} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-SingleExec.west); 
 \node (3-ocps) [pbox,right=15mm of 2-SingleExec] {\textbf{OCPS} };
@@ -63,7 +78,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-prompt) [pbox,below=4pt of 3-ocps] {\textbf{Prompt f/ w} };
 \node [below right] at (3-prompt.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SingleExec.east) -| ++(0.4,0) |- (3-prompt.west); 
-\node (1-DF) [gbox,below=291pt of 1-DA] {\textbf{Data Facilities} };
+\node (1-DF) [gbox,below=414pt of 1-DA] {\textbf{Data Facilities} };
 \node [below right] at (1-DF.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DF.west); 
 \node (2-Curation) [tbox,right=15mm of 1-DF] {\textbf{Data Curation} };
@@ -132,10 +147,16 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-BigDB) [abox,right=15mm of 2-CompDb] {\textbf{Big Databases} };
 \node [below right] at (3-BigDB.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-CompDb.east) -| ++(0.4,0) |- (3-BigDB.west); 
-\node (3-uDB) [abox,below=4pt of 3-BigDB] {\textbf{User Databases} };
+\node (4-PromptDB) [pbox,right=15mm of 3-BigDB] {\textbf{PromptDV} };
+\node [below right] at (4-PromptDB.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-BigDB.east) -| ++(0.4,0) |- (4-PromptDB.west); 
+\node (4-Qserv) [pbox,below=4pt of 4-PromptDB] {\textbf{Qserv} };
+\node [below right] at (4-Qserv.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-BigDB.east) -| ++(0.4,0) |- (4-Qserv.west); 
+\node (3-uDB) [abox,below=45pt of 3-BigDB] {\textbf{User Databases} };
 \node [below right] at (3-uDB.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-CompDb.east) -| ++(0.4,0) |- (3-uDB.west); 
-\node (2-Portal) [pbox,below=45pt of 2-CompDb] {\textbf{RSP Portal} };
+\node (2-Portal) [pbox,below=86pt of 2-CompDb] {\textbf{RSP Portal} };
 \node [below right] at (2-Portal.north west) {\small \color{blue}Product} ;
  \draw[pline] (1-DS.east) -| ++(0.4,0) |- (2-Portal.west); 
 \node (2-SQuaRE) [tbox,below=4pt of 2-Portal] {\textbf{SQuaRE} };
@@ -144,14 +165,62 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-Doc) [abox,right=15mm of 2-SQuaRE] {\textbf{Doc Services} };
 \node [below right] at (3-Doc.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-SQuaRE.east) -| ++(0.4,0) |- (3-Doc.west); 
-\node (3-Phal) [pbox,below=4pt of 3-Doc] {\textbf{Phalanx} };
+\node (4-dochow) [pbox,right=15mm of 3-Doc] {\textbf{Documentation standards} };
+\node [below right] at (4-dochow.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-Doc.east) -| ++(0.4,0) |- (4-dochow.west); 
+\node (4-ltd) [pbox,below=4pt of 4-dochow] {\textbf{LtD} };
+\node [below right] at (4-ltd.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-Doc.east) -| ++(0.4,0) |- (4-ltd.west); 
+\node (4-templ) [pbox,below=4pt of 4-ltd] {\textbf{Templating} };
+\node [below right] at (4-templ.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-Doc.east) -| ++(0.4,0) |- (4-templ.west); 
+\node (3-Phal) [pbox,below=86pt of 3-Doc] {\textbf{Phalanx} };
 \node [below right] at (3-Phal.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SQuaRE.east) -| ++(0.4,0) |- (3-Phal.west); 
-\node (3-RSP) [pbox,below=4pt of 3-Phal] {\textbf{RSP} };
+\node (4-auth) [abox,right=15mm of 3-Phal] {\textbf{Authorisation} };
+\node [below right] at (4-auth.north west) {\small \color{blue}Activity} ;
+ \draw[pline] (3-Phal.east) -| ++(0.4,0) |- (4-auth.west); 
+\node (4-releng) [abox,below=4pt of 4-auth] {\textbf{Reliability Engineering} };
+\node [below right] at (4-releng.north west) {\small \color{blue}Activity} ;
+ \draw[pline] (3-Phal.east) -| ++(0.4,0) |- (4-releng.west); 
+\node (4-secret) [abox,below=4pt of 4-releng] {\textbf{Secrets} };
+\node [below right] at (4-secret.north west) {\small \color{blue}Activity} ;
+ \draw[pline] (3-Phal.east) -| ++(0.4,0) |- (4-secret.west); 
+\node (3-RSP) [pbox,below=86pt of 3-Phal] {\textbf{RSP} };
 \node [below right] at (3-RSP.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SQuaRE.east) -| ++(0.4,0) |- (3-RSP.west); 
-\node (3-Sasq) [pbox,below=4pt of 3-RSP] {\textbf{Sasquatch} };
+\node (4-api) [pbox,right=15mm of 3-RSP] {\textbf{APIs} };
+\node [below right] at (4-api.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-RSP.east) -| ++(0.4,0) |- (4-api.west); 
+\node (4-flag) [pbox,below=4pt of 4-api] {\textbf{data.lsst.cloud} };
+\node [below right] at (4-flag.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-RSP.east) -| ++(0.4,0) |- (4-flag.west); 
+\node (4-ident) [pbox,below=4pt of 4-flag] {\textbf{Authentication} };
+\node [below right] at (4-ident.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-RSP.east) -| ++(0.4,0) |- (4-ident.west); 
+\node (4-nb) [pbox,below=4pt of 4-ident] {\textbf{Notebook} };
+\node [below right] at (4-nb.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-RSP.east) -| ++(0.4,0) |- (4-nb.west); 
+\node (4-portal) [pbox,below=4pt of 4-nb] {\textbf{Portal} };
+\node [below right] at (4-portal.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-RSP.east) -| ++(0.4,0) |- (4-portal.west); 
+\node (4-sqrone) [pbox,below=4pt of 4-portal] {\textbf{Square One} };
+\node [below right] at (4-sqrone.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-RSP.east) -| ++(0.4,0) |- (4-sqrone.west); 
+\node (4-support) [pbox,below=4pt of 4-sqrone] {\textbf{User Support} };
+\node [below right] at (4-support.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-RSP.east) -| ++(0.4,0) |- (4-support.west); 
+\node (3-Sasq) [pbox,below=250pt of 3-RSP] {\textbf{Sasquatch} };
 \node [below right] at (3-Sasq.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SQuaRE.east) -| ++(0.4,0) |- (3-Sasq.west); 
+\node (4-efd) [pbox,right=15mm of 3-Sasq] {\textbf{EFD} };
+\node [below right] at (4-efd.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-Sasq.east) -| ++(0.4,0) |- (4-efd.west); 
+\node (4-metric) [pbox,below=4pt of 4-efd] {\textbf{Metrics} };
+\node [below right] at (4-metric.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-Sasq.east) -| ++(0.4,0) |- (4-metric.west); 
+\node (4-telgw) [pbox,below=4pt of 4-metric] {\textbf{Telemetry Gateway} };
+\node [below right] at (4-telgw.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-Sasq.east) -| ++(0.4,0) |- (4-telgw.west); 
 \end{tikzpicture}
 \end{document}
