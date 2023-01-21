@@ -8,7 +8,7 @@
 \usepackage{tikz,hyperref,amsmath}
 \usetikzlibrary{positioning,arrows,shapes,decorations.shapes,shapes.arrows}
 \usetikzlibrary{backgrounds,calc}
-\usepackage[paperwidth=26.0cm,paperheight=72.26cm,
+\usepackage[paperwidth=19.5cm,paperheight=73.82000000000001cm,
 left=-2mm,top=3mm,bottom=0mm,right=0mm,
 noheadfoot,marginparwidth=0pt,includemp=false,
 textwidth=30cm,textheight=50mm]{geometry}
@@ -78,7 +78,10 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-prompt) [pbox,below=4pt of 3-ocps] {\textbf{Prompt f/ w} };
 \node [below right] at (3-prompt.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SingleExec.east) -| ++(0.4,0) |- (3-prompt.west); 
-\node (1-DF) [gbox,below=414pt of 1-DA] {\textbf{Data Facilities} };
+\node (1-DAL) [tbox,below=414pt of 1-DA] {\textbf{Data Acquisition LHN} };
+\node [below right] at (1-DAL.north west) {\small \color{blue}Team} ;
+ \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DAL.west); 
+\node (1-DF) [gbox,below=4pt of 1-DAL] {\textbf{Data Facilities} };
 \node [below right] at (1-DF.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DF.west); 
 \node (2-Curation) [tbox,right=15mm of 1-DF] {\textbf{Data Curation} };
@@ -105,16 +108,16 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (2-Infra) [gbox,below=209pt of 2-Curation] {\textbf{Infrastructures} };
 \node [below right] at (2-Infra.north west) {\small \color{blue}Group} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-Infra.west); 
-\node (3-cdf) [tbox,right=15mm of 2-Infra] {\textbf{CDF} };
-\node [below right] at (3-cdf.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-cdf.west); 
-\node (3-frdf) [tbox,below=4pt of 3-cdf] {\textbf{FrDF} };
+\node (3-cdac) [tbox,right=15mm of 2-Infra] {\textbf{CDAC} };
+\node [below right] at (3-cdac.north west) {\small \color{blue}Team} ;
+ \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-cdac.west); 
+\node (3-frdf) [tbox,below=4pt of 3-cdac] {\textbf{FrDF} };
 \node [below right] at (3-frdf.north west) {\small \color{blue}Team} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-frdf.west); 
-\node (3-tdf) [tbox,below=4pt of 3-frdf] {\textbf{TDF} };
-\node [below right] at (3-tdf.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-tdf.west); 
-\node (3-ukdf) [tbox,below=4pt of 3-tdf] {\textbf{UKDF} };
+\node (3-sdf) [tbox,below=4pt of 3-frdf] {\textbf{SDF} };
+\node [below right] at (3-sdf.north west) {\small \color{blue}Team} ;
+ \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-sdf.west); 
+\node (3-ukdf) [tbox,below=4pt of 3-sdf] {\textbf{UKDF} };
 \node [below right] at (3-ukdf.north west) {\small \color{blue}Team} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-ukdf.west); 
 \node (3-usdf) [tbox,below=4pt of 3-ukdf] {\textbf{USDF} };
@@ -129,6 +132,9 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-ubatch) [pbox,below=4pt of 3-Panda] {\textbf{User Batch} };
 \node [below right] at (3-ubatch.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-MultiExec.east) -| ++(0.4,0) |- (3-ubatch.west); 
+\node (4-UWS) [pbox,right=15mm of 3-ubatch] {\textbf{UWS} };
+\node [below right] at (4-UWS.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-ubatch.east) -| ++(0.4,0) |- (4-UWS.west); 
 \node (1-DP) [gbox,below=496pt of 1-DF] {\textbf{Data Production} };
 \node [below right] at (1-DP.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DP.west); 
