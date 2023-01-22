@@ -24,8 +24,25 @@ The USDAC is hosted on Google Cloud.
 Most image data remains at USDF but some catalogs and possibly coadds will be kept on Google.
 All User files spaces and the RSP will be on google \citedsp{DMTN-209}.
 
-\subsection{Chile DAC}
+\subsection{Chile facilities}\label{sec:chilefacilities}
+There are facilities at the base and the summit in Chile.
+
+\subsubsection{Summit Facilities}
+We maintain a data center on the summit of cerro Pachon.
+A large part of this is a kubernetes cluster which runs the control system components (CSCs) and the science platform to allow the team access to the images coming of the cameras.
+There are many other machines for individual control - mostly within the data center though some are physically close to the devices they control.
+We are responsible for all fibre cabling and networking  within the facility to allow interconnection of the equipment.
+
+\subsubsection{Base Facilities}
+Within the NOIRLab base data center we maintain a full DAQ and ancillary machines for testing the control system.
+This is detailed in .. ITTN-00
+The base facility is also where our DWDM connects to the summit and to the LHN .
+Finally some virtual machines run here for services and backups of services in the US such as email.
+
+
+\subsubsection{Chile DAC}
 
 The Chilean Data Access Center will be built after operations commences.
 Some discussions are still pending on its exact shape see \citeds{LDM-572}.
+This will be hosted in the base data center.
 

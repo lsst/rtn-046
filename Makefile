@@ -59,3 +59,7 @@ tree:
 	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY FEver\!A1:H 
 	pdflatex ProductTree.tex
 
+# pick up this form the lsst-texmf/bin
+tables: .FORCE
+	cd tables; makeTablesFromGoogle.py 1KAmk2NcSFknXiqbwMekaHkTQOzZ6RUAgt7_tqvBi1HM DMops\!A1:F
+
