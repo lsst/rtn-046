@@ -81,6 +81,9 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (1-DAL) [tbox,below=414pt of 1-DA] {\textbf{Data Acquisition LHN} };
 \node [below right] at (1-DAL.north west) {\small \color{blue}Team} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DAL.west); 
+\node (2-CDevOps) [tbox,right=15mm of 1-DAL] {\textbf{Chile DevOps} };
+\node [below right] at (2-CDevOps.north west) {\small \color{blue}Team} ;
+ \draw[pline] (1-DAL.east) -| ++(0.4,0) |- (2-CDevOps.west); 
 \node (1-DF) [gbox,below=4pt of 1-DAL] {\textbf{Data Facilities} };
 \node [below right] at (1-DF.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DF.west); 
