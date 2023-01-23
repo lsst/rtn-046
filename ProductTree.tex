@@ -8,7 +8,7 @@
 \usepackage{tikz,hyperref,amsmath}
 \usetikzlibrary{positioning,arrows,shapes,decorations.shapes,shapes.arrows}
 \usetikzlibrary{backgrounds,calc}
-\usepackage[paperwidth=19.5cm,paperheight=73.82000000000001cm,
+\usepackage[paperwidth=22.5cm,paperheight=72.26cm,
 left=-2mm,top=3mm,bottom=0mm,right=0mm,
 noheadfoot,marginparwidth=0pt,includemp=false,
 textwidth=30cm,textheight=50mm]{geometry}
@@ -27,10 +27,10 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \begin{document}
 \begin{tikzpicture}[node distance=0mm]
 \node (0-DM) [wbbox]{\textbf{DM Ops}};
-\node (1-DA) [tbox,right=15mm of 0-DM] {\textbf{Data Abstraction} };
-\node [below right] at (1-DA.north west) {\small \color{blue}Team} ;
+\node (1-DA) [gbox,right=15mm of 0-DM] {\textbf{Data Abstraction} };
+\node [below right] at (1-DA.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DA.west); 
-\node (2-DataEng) [abox,right=15mm of 1-DA] {\textbf{Data Engineering} };
+\node (2-DataEng) [abox,right=15mm of 1-DA] {\textbf{Data Eng} };
 \node [below right] at (2-DataEng.north west) {\small \color{blue}Activity} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-DataEng.west); 
 \node (3-felis) [pbox,right=15mm of 2-DataEng] {\textbf{Felis} };
@@ -39,10 +39,19 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-meta) [abox,below=4pt of 3-felis] {\textbf{Metadata} };
 \node [below right] at (3-meta.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-DataEng.east) -| ++(0.4,0) |- (3-meta.west); 
-\node (2-Middle) [abox,below=45pt of 2-DataEng] {\textbf{Middleware} };
+\node (2-Middle) [abox,below=45pt of 2-DataEng] {\textbf{Pipe Middleware} };
 \node [below right] at (2-Middle.north west) {\small \color{blue}Activity} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-Middle.west); 
-\node (3-bps) [pbox,right=15mm of 2-Middle] {\textbf{BPS} };
+\node (2-SingleExec) [pbox,right=15mm of 2-Middle] {\textbf{Sis Exec} };
+\node [below right] at (2-SingleExec.north west) {\small \color{blue}Product} ;
+ \draw[pline] (2-Middle.east) -| ++(0.4,0) |- (2-SingleExec.west); 
+\node (3-ocps) [pbox,right=15mm of 2-SingleExec] {\textbf{OCPS} };
+\node [below right] at (3-ocps.north west) {\small \color{blue}Product} ;
+ \draw[pline] (2-SingleExec.east) -| ++(0.4,0) |- (3-ocps.west); 
+\node (3-prompt) [pbox,below=4pt of 3-ocps] {\textbf{Prompt f/ w} };
+\node [below right] at (3-prompt.north west) {\small \color{blue}Product} ;
+ \draw[pline] (2-SingleExec.east) -| ++(0.4,0) |- (3-prompt.west); 
+\node (3-bps) [pbox,below=45pt of 2-SingleExec] {\textbf{BPS} };
 \node [below right] at (3-bps.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Middle.east) -| ++(0.4,0) |- (3-bps.west); 
 \node (3-butler) [pbox,below=4pt of 3-bps] {\textbf{Butler} };
@@ -69,17 +78,8 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-pip) [pbox,below=4pt of 4-pex] {\textbf{pipe\_base} };
 \node [below right] at (4-pip.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-spinter.east) -| ++(0.4,0) |- (4-pip.west); 
-\node (2-SingleExec) [pbox,below=250pt of 2-Middle] {\textbf{Single-site Exec} };
-\node [below right] at (2-SingleExec.north west) {\small \color{blue}Product} ;
- \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-SingleExec.west); 
-\node (3-ocps) [pbox,right=15mm of 2-SingleExec] {\textbf{OCPS} };
-\node [below right] at (3-ocps.north west) {\small \color{blue}Product} ;
- \draw[pline] (2-SingleExec.east) -| ++(0.4,0) |- (3-ocps.west); 
-\node (3-prompt) [pbox,below=4pt of 3-ocps] {\textbf{Prompt f/ w} };
-\node [below right] at (3-prompt.north west) {\small \color{blue}Product} ;
- \draw[pline] (2-SingleExec.east) -| ++(0.4,0) |- (3-prompt.west); 
-\node (1-DAL) [tbox,below=414pt of 1-DA] {\textbf{Data Acquisition LHN} };
-\node [below right] at (1-DAL.north west) {\small \color{blue}Team} ;
+\node (1-DAL) [gbox,below=414pt of 1-DA] {\textbf{Data Acquisition LHN} };
+\node [below right] at (1-DAL.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DAL.west); 
 \node (2-CDevOps) [tbox,right=15mm of 1-DAL] {\textbf{Chile DevOps} };
 \node [below right] at (2-CDevOps.north west) {\small \color{blue}Team} ;
@@ -108,8 +108,8 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-Rucio) [abox,below=4pt of 3-Repos] {\textbf{Rucio} };
 \node [below right] at (3-Rucio.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-Curation.east) -| ++(0.4,0) |- (3-Rucio.west); 
-\node (2-Infra) [gbox,below=209pt of 2-Curation] {\textbf{Infrastructures} };
-\node [below right] at (2-Infra.north west) {\small \color{blue}Group} ;
+\node (2-Infra) [tbox,below=209pt of 2-Curation] {\textbf{Infrastructures} };
+\node [below right] at (2-Infra.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-Infra.west); 
 \node (3-cdac) [tbox,right=15mm of 2-Infra] {\textbf{CDAC} };
 \node [below right] at (3-cdac.north west) {\small \color{blue}Team} ;
@@ -165,10 +165,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-uDB) [abox,below=45pt of 3-BigDB] {\textbf{User Databases} };
 \node [below right] at (3-uDB.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-CompDb.east) -| ++(0.4,0) |- (3-uDB.west); 
-\node (2-Portal) [pbox,below=86pt of 2-CompDb] {\textbf{RSP Portal} };
-\node [below right] at (2-Portal.north west) {\small \color{blue}Product} ;
- \draw[pline] (1-DS.east) -| ++(0.4,0) |- (2-Portal.west); 
-\node (2-SQuaRE) [tbox,below=4pt of 2-Portal] {\textbf{SQuaRE} };
+\node (2-SQuaRE) [tbox,below=86pt of 2-CompDb] {\textbf{SQuaRE} };
 \node [below right] at (2-SQuaRE.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DS.east) -| ++(0.4,0) |- (2-SQuaRE.west); 
 \node (3-Doc) [abox,right=15mm of 2-SQuaRE] {\textbf{Doc Services} };

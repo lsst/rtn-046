@@ -285,7 +285,7 @@ def outputLandMix(fout,ptree):
         d = 1
         if (prev):
             d = prev.depth()
-        width =  d  * ( leafWidth + bigGap ) + bigGap # cm
+        width =  d  * ( leafWidth + bigGap ) +  bigGap # cm
         if sib:
             print(sib.name, d, p.name)
         print(r" {p.id} {p.parent} depth={d} width={w} ".format(p=p, d=d,w=width ))
@@ -857,7 +857,7 @@ def makeTree(values):
     # need to skip a line or two
     ptree = constructTree(values)
 
-    paperwidth = 0
+    paperwidth = 3
     height = 0
     if (outdepth <= 100 ):
         ntree = slice(ptree, outdepth)
