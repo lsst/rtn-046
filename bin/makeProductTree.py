@@ -31,8 +31,8 @@ APPLICATION_NAME = 'Rubin Product Tree from Google Sheet'
 
 # pt sizes for box + margin + gap between boex
 txtheight = 35
-leafHeight = 1.56  # cm space per leaf box .. height of page calc
-leafWidth = 3.7  # cm space per leaf box .. width of page calc
+leafHeight = 1.55  # cm space per leaf box .. height of page calc
+leafWidth = 4.9  # cm space per leaf box .. width of page calc
 smallGap = 0.2 # cm between leaf boxes in the same group
 bigGap = 0.2 # cm between different levels, or leaf boxes
 sep = 2  # inner sep
