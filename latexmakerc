@@ -1,0 +1,5 @@
+#For use with Overleaf you need this file overleaf->settings LulaTex 
+$ENV{'TZ'}='America/Los_Angeles';
+$ENV{'TEXMFHOME'}='./texmf';
+$ENV{'TEXINPUTS'}='./texmf//:' . $ENV{'TEXINPUTS'};
+$ENV{'BSTINPUTS'}='./texmf//:' . $ENV{'BSTINPUTS'};
