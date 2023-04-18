@@ -8,7 +8,7 @@
 \usepackage{tikz,hyperref,amsmath}
 \usetikzlibrary{positioning,arrows,shapes,decorations.shapes,shapes.arrows}
 \usetikzlibrary{backgrounds,calc}
-\usepackage[paperwidth=25.500000000000004cm,paperheight=71.8cm,
+\usepackage[paperwidth=25.500000000000004cm,paperheight=73.35000000000001cm,
 left=-2mm,top=3mm,bottom=0mm,right=0mm,
 noheadfoot,marginparwidth=0pt,includemp=false,
 textwidth=30cm,textheight=50mm]{geometry}
@@ -192,7 +192,10 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-secret) [abox,below=4pt of 4-releng] {\textbf{Secrets} };
 \node [below right] at (4-secret.north west) {\small \color{blue}Activity} ;
  \draw[pline] (3-Phal.east) -| ++(0.4,0) |- (4-secret.west); 
-\node (3-RSP) [pbox,below=86pt of 3-Phal] {\textbf{RSP} };
+\node (POCS) [pbox,below=4pt of 4-secret] {\textbf{Planned Obs.} };
+\node [below right] at (POCS.north west) {\small \color{blue}Product} ;
+ \draw[pline] (3-Phal.east) -| ++(0.4,0) |- (POCS.west); 
+\node (3-RSP) [pbox,below=127pt of 3-Phal] {\textbf{RSP} };
 \node [below right] at (3-RSP.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SQuaRE.east) -| ++(0.4,0) |- (3-RSP.west); 
 \node (4-api) [pbox,right=15mm of 3-RSP] {\textbf{APIs} };
