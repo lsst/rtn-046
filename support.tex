@@ -4,6 +4,26 @@ One may consider \emph{normal hours} in operations may be different and the DM C
 
 We do have DM people in various timezones which may give more coverage however the range of functionality is vast and not everyone can support all of it.
 
+\subsection{On-Call Support for Prompt Processing}
+
+DM is required \lsrreq{0025} to deliver 98\% of detectable alerts within the required latency.  
+Loss of a single night represents a sizable portion of this budget, so on-call support of Alert Production and Prompt Processing will necessary throughout operations.
+
+DM will use a multi-tier triage and on-call system to meet this requirement. 
+Automated metrics systems will raise alarms when images are taken and alerts are not being sent.
+These will be initially handled by a triage worker on-shift; ideally this work can be split between the US West Coast and/or Europe to minimize shift work after midnight local time.
+We will develop a playbook to enable the triager to resolve some issues themselves, but it may be necessary for them to page other DM staff members in an on-call rotation to debug more serious problems.  
+Experience suggests that in steady state operations most sustained problems will be due to failures of services, databases, and networks rather than the algorithmic pipeline components.
+
+The Observing Specialists at the summit should also be involved: in particular, in case of a failure of the Long-Haul Networks, images may be taken at the summit but no alerts produced. 
+We will implement a status display at the Summit that will indicate if alerts are not being sent for the images being recorded.
+In case of sustained outages the observers may backstop the automated alerts by contacting the triage and on-call staff through appropriate channels.
+
+Members of the triage and on-call team will be drawn from throughout DM, and will include expertise from the Data Facility, Campaign Management, Data Abstraction, and Algorithms \& Pipelines.
+The current Campaign Management pilot for Alert Production will be responsible for maintaining and overseeing the on-call rotation.
+
+Where possible we will use tooling to reduce the risk of downtime, for example by running an automated integration test prior to the start of observing to identify potential new failures due to changes in the deployed pipelines and services.
+Problems identified can then be fixed during regular working hours.
 
 \subsubsection{Out of hours - best effort}
 (there will be something developer.lsst.io ?)
