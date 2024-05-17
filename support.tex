@@ -6,16 +6,16 @@ We do have DM people in various timezones which may give more coverage however t
 
 \subsection{On-Call Support for Prompt Processing}
 
-DM is required \lsrreq{0025} to deliver 98\% of detectable alerts within the required latency.  
+DM is required \lsrreq{0025} to deliver 98\% of detectable alerts within the required latency.
 Loss of a single night represents a sizable portion of this budget, so on-call support of Alert Production and Prompt Processing will necessary throughout operations.
 
-DM will use a multi-tier triage and on-call system to meet this requirement. 
+DM will use a multi-tier triage and on-call system to meet this requirement.
 Automated metrics systems will raise alarms when images are taken and alerts are not being sent.
 These will be initially handled by a triage worker on-shift; ideally this work can be split between the US West Coast and/or Europe to minimize shift work after midnight local time.
-We will develop a playbook to enable the triager to resolve some issues themselves, but it may be necessary for them to page other DM staff members in an on-call rotation to debug more serious problems.  
+We will develop a playbook to enable the triage to resolve some issues themselves, but it may be necessary for them to page other DM staff members in an on-call rotation to debug more serious problems.
 Experience suggests that in steady state operations most sustained problems will be due to failures of services, databases, and networks rather than the algorithmic pipeline components.
 
-The Observing Specialists at the summit should also be involved: in particular, in case of a failure of the Long-Haul Networks, images may be taken at the summit but no alerts produced. 
+The Observing Specialists at the summit should also be involved: in particular, in case of a failure of the Long-Haul Networks, images may be taken at the summit but no alerts produced.
 We will implement a status display at the Summit that will indicate if alerts are not being sent for the images being recorded.
 In case of sustained outages the observers may backstop the automated alerts by contacting the triage and on-call staff through appropriate channels.
 
@@ -37,5 +37,17 @@ There are other products build by DM such as the EFD which are critical for whic
 
 Several of us are available out of hours and look at problems when they arise however there is no guaranteed support out of hours.
 
+
+\subsubsection{Potential Outline}
+If we do on call on best effort basis we should agree on some ground rules.
+Institutionally it may be difficult to formalize these .
+These might be:
+
+
+\begin{itemize}
+\item Should an individual get called out of hours they would not need to be in any meetings or workplace the following morning.
+\item Any hour worked out of hours may be taken as 1.5 hours leave at another point in time.
+\item If requested specific mobile phones for on call should be provided (may be hard given our distributed nature).
+\end{itemize}
 
 
