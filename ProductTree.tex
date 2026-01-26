@@ -8,7 +8,7 @@
 \usepackage{tikz,hyperref,amsmath}
 \usetikzlibrary{positioning,arrows,shapes,decorations.shapes,shapes.arrows}
 \usetikzlibrary{backgrounds,calc}
-\usepackage[paperwidth=30.6cm,paperheight=85.75cm,
+\usepackage[paperwidth=30.6cm,paperheight=91.95cm,
 left=-2mm,top=3mm,bottom=0mm,right=0mm,
 noheadfoot,marginparwidth=0pt,includemp=false,
 textwidth=30cm,textheight=50mm]{geometry}
@@ -159,7 +159,10 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (2-CST) [tbox,right=15mm of 1-DMSCI] {\textbf{CST} };
 \node [below right] at (2-CST.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DMSCI.east) -| ++(0.4,0) |- (2-CST.west); 
-\node (3-DRS) [abox,right=15mm of 2-CST] {\textbf{DR support} };
+\node (3-CSCI) [abox,right=15mm of 2-CST] {\textbf{Citizen Science} };
+\node [below right] at (3-CSCI.north west) {\small \color{blue}Activity} ;
+ \draw[pline] (2-CST.east) -| ++(0.4,0) |- (3-CSCI.west); 
+\node (3-DRS) [abox,below=4pt of 3-CSCI] {\textbf{DR support} };
 \node [below right] at (3-DRS.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-CST.east) -| ++(0.4,0) |- (3-DRS.west); 
 \node (3-FT) [abox,below=4pt of 3-DRS] {\textbf{Forum} };
@@ -171,7 +174,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-NBS) [abox,below=4pt of 3-INT] {\textbf{NB support} };
 \node [below right] at (3-NBS.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-CST.east) -| ++(0.4,0) |- (3-NBS.west); 
-\node (1-DP) [gbox,below=127pt of 1-DMSCI] {\textbf{Data Production} };
+\node (1-DP) [gbox,below=168pt of 1-DMSCI] {\textbf{Data Production} };
 \node [below right] at (1-DP.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DP.west); 
 \node (2-Camp) [tbox,right=15mm of 1-DP] {\textbf{Campaign Management} };
@@ -180,7 +183,19 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (2-SciPip) [tbox,below=4pt of 2-Camp] {\textbf{Algorithms \&  Pipelines} };
 \node [below right] at (2-SciPip.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DP.east) -| ++(0.4,0) |- (2-SciPip.west); 
-\node (1-DS) [gbox,below=45pt of 1-DP] {\textbf{Data Services} };
+\node (2-VnV) [tbox,below=4pt of 2-SciPip] {\textbf{V\& V} };
+\node [below right] at (2-VnV.north west) {\small \color{blue}Team} ;
+ \draw[pline] (1-DP.east) -| ++(0.4,0) |- (2-VnV.west); 
+\node (2-SMAT) [abox,right=15mm of 2-VnV] {\textbf{Systematics} };
+\node [below right] at (2-SMAT.north west) {\small \color{blue}Activity} ;
+ \draw[pline] (2-VnV.east) -| ++(0.4,0) |- (2-SMAT.west); 
+\node (3-PRO) [abox,below=4pt of 2-SMAT] {\textbf{Science Production} };
+\node [below right] at (3-PRO.north west) {\small \color{blue}Activity} ;
+ \draw[pline] (2-VnV.east) -| ++(0.4,0) |- (3-PRO.west); 
+\node (3-SDQA) [abox,below=4pt of 3-PRO] {\textbf{SDQA} };
+\node [below right] at (3-SDQA.north west) {\small \color{blue}Activity} ;
+ \draw[pline] (2-VnV.east) -| ++(0.4,0) |- (3-SDQA.west); 
+\node (1-DS) [gbox,below=168pt of 1-DP] {\textbf{Data Services} };
 \node [below right] at (1-DS.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DS.west); 
 \node (2-CompDb) [tbox,right=15mm of 1-DS] {\textbf{Complex. DB} };
