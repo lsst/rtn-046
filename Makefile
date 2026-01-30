@@ -53,7 +53,7 @@ meta.tex: Makefile .FORCE
 
 
 tree:
-	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY FEver\!A1:H --depth=2
+	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY FEver\!A1:H --depth=3
 	pdflatex ProductTree.tex
 	mv ProductTree.pdf ProductTreeSmall.pdf
 	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY FEver\!A1:H 
