@@ -60,6 +60,7 @@ tree:
 	pdflatex ProductTree.tex
 
 # pick up this form the lsst-texmf/bin
+# https://docs.google.com/spreadsheets/d/1KAmk2NcSFknXiqbwMekaHkTQOzZ6RUAgt7_tqvBi1HM/edit?gid=717068729#gid=717068729
 tables: .FORCE
 	cd tables; makeTablesFromGoogle.py 1KAmk2NcSFknXiqbwMekaHkTQOzZ6RUAgt7_tqvBi1HM DMops\!A1:F
 
