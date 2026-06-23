@@ -480,7 +480,7 @@ def outputLandR(fout, ptree, pid):
                      rf"[{btype}box, below=15mm of {pid}]{{\textbf{{{prod.name}}}}};",
                      file=fout)
             else:
-                print(fr"\node ({p.id}) "
+                print(fr"\node ({prod.id}) "
                      fr"[{btype}box]{{\textbf{{{prod.name}}}}};", file=fout)
         sib = prod
         prevw = stree
@@ -1007,28 +1007,249 @@ def tfooter(tout):
 
 
 
+DEFAULT_INSTITUTIONS = ['SLAC', 'IN2P3', 'UK', 'AURA', 'UW', 'Princeton']
+
+
+def process_team_sheet(values, institutions):
+    """
+    Process team sheet data and calculate FTE totals per team by institution.
+
+    Handles pivot table format where department/team names only appear on first row,
+    and subsequent rows for same team have empty department/team columns.
+
+    Args:
+        values: List of rows from the Google Sheet
+        institutions: List of institution names to track individually (others become 'Other')
+
+    Returns:
+        tuple: (team_data, dept_teams)
+            team_data: {team_name: {institution: FTE_total, ...}, ...}
+            dept_teams: {department: [team_name, ...], ...} - preserves order
+    """
+    team_data = {}
+    dept_teams = {}  # Maps department to list of teams (in order)
+    skip_to = 2  # Skip header row
+    count = 0
+    current_dept = None  # Track current department for pivot table format
+    current_team = None  # Track current team for pivot table format
+
+    # Create case-insensitive lookup for institutions
+    inst_lookup = {inst.lower(): inst for inst in institutions}
+
+    for row in values:
+        count += 1
+        if count < skip_to:
+            continue
+
+        # Column A (index 0): department
+        # Column B (index 1): team name
+        # Column C (index 2): institution
+        # Column D (index 3): FTE
+        if len(row) < 4:
+            continue
+
+        dept_cell = row[0].strip() if len(row) > 0 and row[0] else ""
+        team_name_cell = row[1].strip() if len(row) > 1 and row[1] else ""
+        institution_raw = row[2].strip() if len(row) > 2 and row[2] else ""
+        fte_str = row[3].strip() if len(row) > 3 and row[3] else "0"
+
+        # Update current department if we have a new one
+        if dept_cell and 'Total' not in dept_cell:
+            current_dept = dept_cell
+
+        # Skip "Total" rows and invalid entries
+        if 'Total' in team_name_cell or team_name_cell in ['#N/A', '']:
+            # If team name is empty but we have institution, use current_team
+            if team_name_cell == '' and institution_raw and current_team:
+                team_name = current_team
+            else:
+                # Reset current team on total rows or skip
+                if 'Total' in team_name_cell:
+                    current_team = None
+                continue
+        else:
+            # New team name found
+            team_name = team_name_cell
+            current_team = team_name
+
+            # Track team under its department
+            if current_dept:
+                if current_dept not in dept_teams:
+                    dept_teams[current_dept] = []
+                if team_name not in dept_teams[current_dept]:
+                    dept_teams[current_dept].append(team_name)
+
+        if not institution_raw:
+            continue
+
+        try:
+            fte = float(fte_str)
+        except ValueError:
+            print(f"Warning: Could not parse FTE value '{fte_str}' for team '{team_name}'")
+            continue
+
+        # Normalize institution - case-insensitive match
+        institution_lower = institution_raw.lower()
+        if institution_lower in inst_lookup:
+            institution = inst_lookup[institution_lower]
+        else:
+            institution = 'Other'
+
+        # Initialize team if not seen
+        if team_name not in team_data:
+            team_data[team_name] = {inst: 0.0 for inst in institutions}
+            team_data[team_name]['Other'] = 0.0
+
+        # Add FTE to the appropriate institution
+        team_data[team_name][institution] += fte
+
+    return team_data, dept_teams
+
+
+def output_team_report(team_data, dept_teams, institutions):
+    """
+    Output FTE totals per team by institution, grouped by department with subtotals.
+
+    Args:
+        team_data: dict {team_name: {institution: FTE_total, ...}, ...}
+        dept_teams: dict {department: [team_name, ...], ...}
+        institutions: List of institution names
+    """
+    # Build header
+    all_cols = institutions + ['Other', 'Total']
+    header = f"{'Team':<40} " + " ".join(f"{inst:>10}" for inst in all_cols)
+    sep_line = "=" * len(header)
+    dash_line = "-" * len(header)
+
+    print("\n" + sep_line)
+    print("Team FTE Summary by Institution")
+    print(sep_line)
+    print(header)
+    print(dash_line)
+
+    # Grand totals
+    grand_totals = {inst: 0.0 for inst in institutions}
+    grand_totals['Other'] = 0.0
+    grand_total = 0.0
+
+    # Process each department
+    for dept in dept_teams:
+        teams = dept_teams[dept]
+
+        # Department totals
+        dept_totals = {inst: 0.0 for inst in institutions}
+        dept_totals['Other'] = 0.0
+        dept_total = 0.0
+
+        # Print department header
+        print(f"\n  {dept}")
+        print(f"  {'-' * (len(header) - 2)}")
+
+        # Print each team in this department
+        for team_name in teams:
+            if team_name not in team_data:
+                continue
+            data = team_data[team_name]
+            row_total = sum(data.values())
+            dept_total += row_total
+
+            # Build row
+            values = []
+            for inst in institutions:
+                val = data.get(inst, 0.0)
+                dept_totals[inst] += val
+                values.append(f"{val:>10.2f}")
+            other_val = data.get('Other', 0.0)
+            dept_totals['Other'] += other_val
+            values.append(f"{other_val:>10.2f}")
+            values.append(f"{row_total:>10.2f}")
+
+            print(f"    {team_name:<36} " + " ".join(values))
+
+        # Print department subtotal
+        dept_row = []
+        for inst in institutions:
+            grand_totals[inst] += dept_totals[inst]
+            dept_row.append(f"{dept_totals[inst]:>10.2f}")
+        grand_totals['Other'] += dept_totals['Other']
+        dept_row.append(f"{dept_totals['Other']:>10.2f}")
+        grand_total += dept_total
+        dept_row.append(f"{dept_total:>10.2f}")
+
+        print(f"  {'-' * (len(header) - 2)}")
+        print(f"  {dept + ' Total':<38} " + " ".join(dept_row))
+
+    # Print grand totals
+    print("\n" + sep_line)
+    totals_row = []
+    for inst in institutions:
+        totals_row.append(f"{grand_totals[inst]:>10.2f}")
+    totals_row.append(f"{grand_totals['Other']:>10.2f}")
+    totals_row.append(f"{grand_total:>10.2f}")
+    print(f"{'GRAND TOTAL':<40} " + " ".join(totals_row))
+    print(sep_line + "\n")
+
+
+def make_team_report(sheet_id, team_sheet, institutions):
+    """
+    Fetch team sheet and generate FTE report.
+
+    Args:
+        sheet_id: Google Sheet ID
+        team_sheet: Name/range of the team sheet
+        institutions: List of institutions to track
+    """
+    print(f"Fetching team data from sheet: {team_sheet}")
+    result = get_sheet(sheet_id, team_sheet)
+    values = result.get('values', [])
+
+    if not values:
+        print("No data found in team sheet.")
+        return
+
+    team_data, dept_teams = process_team_sheet(values, institutions)
+    output_team_report(team_data, dept_teams, institutions)
+
+
 # MAIN
 
 parser = argparse.ArgumentParser()
 parser.add_argument('id', help="""ID of the google sheet like
                                18wu9f4ov79YDMR1CTEciqAhCawJ7n47C8L9pTAxe""")
-parser.add_argument('sheets', nargs='+',
+parser.add_argument('sheets', nargs='*',
                     help="""Sheet names  and ranges to process
                             within the google sheet e.g. Model!A1:H""")
 parser.add_argument("--depth", help="make tree pdf stopping at depth ", type=int, default=100)
-parser.add_argument("--land", help="make tree pdf landscape rather than portrait default portrait (1 to make full landscape, 2 mixed)", type=int, default=None )
+parser.add_argument("--land", help="make tree pdf landscape rather than portrait default portrait (1 to make full landscape, 2 mixed)", type=int, default=None)
+parser.add_argument("--team", help="Process team sheet and output FTE summary by institution", action="store_true")
+parser.add_argument("--team-sheet", help="Name of the team sheet (default: 'team')", default="team")
+parser.add_argument("--institutions", help="Comma-separated list of institutions to track (default: SLAC,IN2P3,UK,AURA,UW,Princeton)",
+                    default=",".join(DEFAULT_INSTITUTIONS))
 args = parser.parse_args()
-outdepth=args.depth
-land=args.land
-if (land==None):
-    print('Output portrait')
+outdepth = args.depth
+land = args.land
+
+# Parse institutions list
+institutions = [inst.strip() for inst in args.institutions.split(',')]
+
+if args.team:
+    # Process team sheet
+    make_team_report(args.id, args.team_sheet, institutions)
 else:
-    print('Output landscape ', land)
-sheetId=args.id
-sheets=args.sheets
-for r in sheets:
-    print("Google %s , Sheet %s" % (sheetId, r))
-    result = get_sheet(sheetId, r)
-    values = result.get('values', [])
-    makeTree(values)
+    # Original tree processing
+    if not args.sheets:
+        parser.error("sheets argument is required when not using --team")
+
+    if land is None:
+        print('Output portrait')
+    else:
+        print('Output landscape ', land)
+
+    sheetId = args.id
+    sheets = args.sheets
+    for r in sheets:
+        print("Google %s , Sheet %s" % (sheetId, r))
+        result = get_sheet(sheetId, r)
+        values = result.get('values', [])
+        makeTree(values)
 
