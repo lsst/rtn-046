@@ -41,6 +41,77 @@ WBS = 1  # Put WBS on diagram
 PKG = 1  # put packages on diagram
 outdepth = 100  # set with --depth if you want a shallower tree
 
+# Global team data for including in tree diagrams
+g_team_data = None  # Dict {team_name: {institution: FTE, ...}, ...}
+g_institutions = None  # List of institution names for ordering
+
+
+def get_team_total_fte(orig_name):
+    """Get total FTE for a team.
+    
+    Args:
+        orig_name: Original (unescaped) product name to look up in team data
+        
+    Returns:
+        Total FTE as float, or 0 if no data
+    """
+    if not g_team_data:
+        return 0
+    
+    # Try to find matching team data (case-insensitive match)
+    name_lower = orig_name.lower()
+    for team_name, fte_dict in g_team_data.items():
+        if team_name.lower() == name_lower:
+            # Sum all institution FTEs
+            total = sum(fte_dict.values())
+            return total
+    return 0
+
+
+def get_team_fte_label(orig_name, prod_type=""):
+    """Get formatted team FTE label for a product if team data is available.
+    
+    Args:
+        orig_name: Original (unescaped) product name to look up in team data
+        prod_type: Product type - only "Team" types get FTE labels
+        
+    Returns:
+        String with institution FTEs formatted for LaTeX, or empty string if no data
+    """
+    if not g_team_data or not g_institutions:
+        return ""
+    
+    # Only add team FTE info to Team boxes
+    if prod_type.lower() != "team":
+        return ""
+    
+    # Try to find matching team data (case-insensitive match)
+    team_fte = None
+    name_lower = orig_name.lower()
+    for team_name, fte_dict in g_team_data.items():
+        if team_name.lower() == name_lower:
+            team_fte = fte_dict
+            break
+    
+    if not team_fte:
+        return ""
+    
+    # Format FTEs for display
+    parts = []
+    for inst in g_institutions:
+        fte = team_fte.get(inst, 0)
+        if fte > 0:
+            parts.append(f"{inst}:{fte:.1f}")
+    
+    # Add 'Other' if present
+    other = team_fte.get('Other', 0)
+    if other > 0:
+        parts.append(f"Oth:{other:.1f}")
+    
+    if parts:
+        return r" \\ \scriptsize " + ", ".join(parts)
+    return ""
+
 def get_credentials() -> Credentials:
     """Gets valid user credentials from storage.
 
@@ -89,9 +160,10 @@ def get_sheet(sheet_id, range):
 
 
 class Product(object):
-    def __init__(self, id, name, parent, desc, manager, owner, type):
+    def __init__(self, id, name, parent, desc, manager, owner, type, orig_name=None):
         self.id = id
         self.name = name
+        self.orig_name = orig_name if orig_name else name  # Original unescaped name for team matching
         self.parent = parent
         self.desc = desc
         self.manager = manager
@@ -99,20 +171,36 @@ class Product(object):
         self.type = type
 
 
-def constructTree(values):
+def constructTree(values, team_tree_mode=False):
     "scan the values file and construct  a tree structure"
     # assume root is after header on line 1
     skip_to = 2
     count = 0
     ptree = Tree()
+    
+    # In team tree mode, create a "top" root node first
+    if team_tree_mode:
+        top_prod = Product("top", "Rubin Observatory", "", "", "", "", "")
+        ptree.create_node(top_prod.id, top_prod.id, data=top_prod)
+        print("top is root (team tree mode)")
+    
     for line in values:
         count = count + 1
         if count < skip_to:
             continue
+        # Skip empty lines
+        if not line or line[0].strip() == '':
+            continue
         print(line)
         id = fixIdTex(line[0]) #make an id from the name
         pid= fixIdTex(line[1]) #use the same formaula on the parent name then we are good
-        name= fixTex(line[2])
+        # In team tree mode, use column D (line[3]) for name; otherwise use column C (line[2])
+        if team_tree_mode and len(line) > 3 and line[3].strip():
+            orig_name = line[3].strip()  # Team name from column D for matching
+            name = fixTex(line[3])
+        else:
+            orig_name = line[2].strip() if len(line) > 2 else ""
+            name = fixTex(line[2])
         type = line[4]
         lead = "TBD"
         if (len(line) >= 6):
@@ -120,19 +208,35 @@ def constructTree(values):
         po = ""
         if (len(line) >= 7):
             po = fixTex(line[6])
-        notes=fixTex(line[3])
-        if len(line) == 8:
-            notes= f"{notes}:{fixTex(line[7])}"
-        prod = Product(id, name, pid, notes, lead, po, type)
-        if count == skip_to:  # root node
-            print(f"{id} is root")
-            ptree.create_node(prod.id, prod.id, data=prod)
+        # In team tree mode, column D is the team name, so notes is empty
+        if team_tree_mode:
+            notes = ""
+        else:
+            notes=fixTex(line[3])
+            if len(line) == 8:
+                notes= f"{notes}:{fixTex(line[7])}"
+        prod = Product(id, name, pid, notes, lead, po, type, orig_name)
+        if count == skip_to:  # first node from sheet
+            if team_tree_mode:
+                # In team tree mode, first node is child of "top"
+                prod.parent = "top"
+                ptree.create_node(prod.id, prod.id, data=prod, parent="top")
+                print(f"{id} is child of top (team tree mode)")
+            else:
+                # Normal mode - first node is root
+                print(f"{id} is root")
+                ptree.create_node(prod.id, prod.id, data=prod)
         else:
             #print("Creating node:" + prod.id + " name:"+ prod.name +
             #      " parent:" + prod.parent)
             if prod.parent != "":
                 ptree.create_node(prod.id, prod.id, data=prod,
                                   parent=prod.parent)
+            elif team_tree_mode:
+                # In team tree mode, nodes with no parent become children of "top"
+                prod.parent = "top"
+                ptree.create_node(prod.id, prod.id, data=prod, parent="top")
+                print(f"{id} has no parent, assigned to top (team tree mode)")
             else:
                 print(id + " no parent")
 
@@ -195,9 +299,21 @@ def outputTexTable(tout, ptree):
 def outputType(fout,prod):
     print("] {", file=fout, end='')
     print(r"\textbf{" + prod.name + "} ", file=fout, end='')
+    team_label = get_team_fte_label(prod.orig_name, prod.type)
+    if team_label:
+        print(team_label, file=fout, end='')
     print("};", file=fout)
     if prod.type != "":
-        print(r"\node [below right] at ({p.id}.north west) {{\small \color{{blue}}{p.type}}} ;".format(p=prod), file=fout)
+        # For Team types, add total FTE in parentheses
+        if prod.type.lower() == "team" and g_team_data:
+            total_fte = get_team_total_fte(prod.orig_name)
+            if total_fte > 0:
+                type_label = f"{prod.type} ({total_fte:.1f})"
+            else:
+                type_label = prod.type
+            print(r"\node [below right] at ({p.id}.north west) {{\small \color{{blue}}{label}}} ;".format(p=prod, label=type_label), file=fout)
+        else:
+            print(r"\node [below right] at ({p.id}.north west) {{\small \color{{blue}}{p.type}}} ;".format(p=prod), file=fout)
     return
 
 def parent(node):
@@ -294,8 +410,9 @@ def outputLandMix(fout,ptree):
         prev = stree
 
     ### place root node
+    team_label = get_team_fte_label(root.orig_name, root.type)
     print(r"\node ({p.id}) "
-         r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}}};".format(p=root,c=child),
+         r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=root,c=child,team_label=team_label),
          file=fout)
     drawLines(fout,row)
     print("{} Product lines in TeX ".format(count))
@@ -472,16 +589,18 @@ def outputLandR(fout, ptree, pid):
             nl = land_red_leaves(sprevw)
             nleaves = nl
             dist = (nleaves -1) * 109 + gap
+            team_label = get_team_fte_label(prod.orig_name, prod.type)
             print(rf"\node ({prod.id}) "
-                 rf"[{btype}box, right={dist}pt of {sib.id}]{{\textbf{{{prod.name}}}}};",file=fout)
+                 rf"[{btype}box, right={dist}pt of {sib.id}]{{\textbf{{{prod.name}}}{team_label}}};",file=fout)
         else:
+            team_label = get_team_fte_label(prod.orig_name, prod.type)
             if (pid):
                 print(rf"\node ({prod.id}) "
-                     rf"[{btype}box, below=15mm of {pid}]{{\textbf{{{prod.name}}}}};",
+                     rf"[{btype}box, below=15mm of {pid}]{{\textbf{{{prod.name}}}{team_label}}};",
                      file=fout)
             else:
                 print(fr"\node ({prod.id}) "
-                     fr"[{btype}box]{{\textbf{{{prod.name}}}}};", file=fout)
+                     fr"[{btype}box]{{\textbf{{{prod.name}}}{team_label}}};", file=fout)
         sib = prod
         prevw = stree
         if (sdepth > 0):
@@ -491,8 +610,9 @@ def outputLandR(fout, ptree, pid):
         drawLines(fout,row)
     else:
         ### place root node
+        team_label = get_team_fte_label(root.orig_name, root.type)
         print(r"\node ({p.id}) "
-             r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}}};".format(p=root,c=child),
+             r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=root,c=child,team_label=team_label),
              file=fout)
         print("{} Product lines in TeX ".format(count))
         drawLines(fout,row)
@@ -501,7 +621,6 @@ def outputLandR(fout, ptree, pid):
 # fout: output file
 # ptree: the tree to print out
 # pid: parent id (seems superfluous since it coincides with root.id)
-# prevd: previous tree depth
 # prevl: previous tree number of leaves
 def outputLandR2(fout, ptree, pid, prevd, prevl):
     stub = slice(ptree, 1) # I want to print only one level down
@@ -571,22 +690,24 @@ def outputLandR2(fout, ptree, pid, prevd, prevl):
             #delta = nl / 2 + nleaves / 2
             dist = (delta -1) * 109 + gap * (delta + 1)
             print(r"Inspect Line: prod: {p} - al: {al} - pnl: {pnl} - plad: {plad} - alpd: {alpd} - sdepth: {sd} - pd: {pd} - delta: {delta} - dist: {dist}".format(p=prod.id,al=al,pnl=pnl,plad=plad,sd=sdepth,pd=pdph,delta=delta,dist=dist,alpd=alpd))
+            team_label = get_team_fte_label(prod.orig_name, prod.type)
             print(r"\node ({p.id}) "
-                 r"[pbox, right={d}pt of {s.id}]{{\textbf{{{p.name}}}}};".format(p=prod,s=sib,d=dist),
+                 r"[pbox, right={d}pt of {s.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=prod,s=sib,d=dist,team_label=team_label),
                  file=fout)
         else:
             #
             al = land_red_leaves2(stree, None)
+            team_label = get_team_fte_label(prod.orig_name, prod.type)
             if (pid):
                 dist = 109 * ( (nch - 1 ) / 2 - 1 ) + gap * ( ( nch - 1 ) / 2 + 1 )
                 #dist = 109 * ( (al - 1 ) / 2 - 1 ) + gap * ( ( al - 1 ) / 2 + 1 )
                 #print(prod.id, pid, nch, dist)
                 print(r"\node ({p.id}) "
-                     r"[pbox, below left=15mm and {d}pt of {pid}]{{\textbf{{{p.name}}}}};".format(p=prod,pid=pid,d=dist),
+                     r"[pbox, below left=15mm and {d}pt of {pid}]{{\textbf{{{p.name}}}{team_label}}};".format(p=prod,pid=pid,d=dist,team_label=team_label),
                      file=fout)
             else:
                 print(r"\node ({p.id}) "
-                     r"[pbox]{{\textbf{{{p.name}}}}};".format(p=prod),
+                     r"[pbox]{{\textbf{{{p.name}}}{team_label}}};".format(p=prod,team_label=team_label),
                      file=fout)
         if (sdepth > 0):
             outputLandR2(fout, stree, prod.id, pdph, pnl)
@@ -600,8 +721,9 @@ def outputLandR2(fout, ptree, pid, prevd, prevl):
         drawLines(fout,row)
     else:
         ### place root node
+        team_label = get_team_fte_label(root.orig_name, root.type)
         print(r"\node ({p.id}) "
-             r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}}};".format(p=root,c=child),
+             r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=root,c=child,team_label=team_label),
              file=fout)
         print("{} Product lines in TeX ".format(count))
         drawLines(fout,row)
@@ -689,8 +811,9 @@ def doRow(fout,ptree,children,nodes,depth, childcount, goingDown):
            child= None
         if (depth==0):  # root node
            #print(r"depth==0 {p.id}  parent  {p.parent},   child={c}".format(p=prod, c=child))
+           team_label = get_team_fte_label(prod.orig_name, prod.type)
            print(r"\node ({p.id}) "
-               r"[wbbox, above=15mm of {c}]{{\textbf{{{p.name}}}}};".format(p=prod,c=child),
+               r"[wbbox, above=15mm of {c}]{{\textbf{{{p.name}}}{team_label}}};".format(p=prod,c=child,team_label=team_label),
                file=fout)
            placed=1
         else:
@@ -767,8 +890,9 @@ def outputTexTreeP(fout, ptree, width, sib, full):
         if (depth <= outdepth):
             if (count == 1 ):  # root node
                 if full ==1:
+                   team_label = get_team_fte_label(prod.orig_name, prod.type)
                    print(r"\node ({p.id}) "
-                      r"[wbbox]{{\textbf{{{p.name}}}}};".format(p=prod),
+                      r"[wbbox]{{\textbf{{{p.name}}}{team_label}}};".format(p=prod,team_label=team_label),
                       file=fout)
                 else: #some sub tree
                    print(fr"\node ({prod.id}) [{bcode}box, ", file=fout)
@@ -846,16 +970,29 @@ def mixTreeDim(ptree):
     #    if depth == 1:
     return (n2l, nmaxSub)
 
-def makeTree(values):
-    "This processes the google sheet  produces a tex tree diagram and a tex longtable."
-    nf = "ProductTree.tex"
+def makeTree(values, team_data=None, institutions=None):
+    """This processes the google sheet produces a tex tree diagram and a tex longtable.
+    
+    Args:
+        values: List of rows from the Google Sheet
+        team_data: Optional dict {team_name: {institution: FTE_total, ...}, ...}
+        institutions: Optional list of institution names for ordering
+    """
+    global g_team_data, g_institutions
+    g_team_data = team_data
+    g_institutions = institutions
+    
+    # Use TeamTree filename when team data is included
+    base_name = "TeamTree" if team_data else "ProductTree"
+    nf = f"{base_name}.tex"
     if (land!=None):
-       nf = "ProductTreeLand.tex"
+       nf = f"{base_name}Land.tex"
     print('Saving product tree in: ', nf)
     nt = "productlist.tex"
 
     # need to skip a line or two
-    ptree = constructTree(values)
+    team_tree_mode = team_data is not None
+    ptree = constructTree(values, team_tree_mode)
 
     paperwidth = 0
     height = 0
@@ -871,6 +1008,17 @@ def makeTree(values):
 
     #print('>n2 - tree depth: ', n2, ntree.depth(), nMS)
 
+    # Adjust box and page sizes for team mode
+    global txtheight, leafHeight, leafWidth
+    if team_tree_mode:
+        txtheight = 56  # Larger boxes for team info
+        leafHeight = 2.8  # Larger spacing for page height calc
+        leafWidth = 5.9  # Larger spacing for page width calc
+    else:
+        txtheight = 35  # Default size
+        leafHeight = 1.55  # Default spacing
+        leafWidth = 4.9  # Default width
+
     # ptree.show(data_property="name")
     if (land==1):   #full landscape
       # get the number of groups of leaves
@@ -880,8 +1028,7 @@ def makeTree(values):
       height = height + ( ntree.depth() + 1 ) * ( leafHeight + 1.5 )  # cm
     elif (land==2):  #mixed landscape/portrait
       paperwidth = paperwidth + 5.2 * n2 + 0.7 # cm
-      streew=paperwidth
-      height = height + nMS * 1.6  # cm
+      height = height + nMS * leafHeight #1.6  # cm
     elif (land==3):  #recursive landscape, same spacing
       # get the number of groups of leaves
       #print('-------------------------')
@@ -915,10 +1062,12 @@ def makeTree(values):
             outputTexTree(fout, ntree, paperwidth)
         footer(fout)
 
-    with open(nt, 'w') as tout:
-        theader(tout)
-        outputTexTable(tout, ptree)
-        tfooter(tout)
+    # Skip productlist output in team tree mode
+    if not team_tree_mode:
+        with open(nt, 'w') as tout:
+            theader(tout)
+            outputTexTable(tout, ptree)
+            tfooter(tout)
 
     return
 # End makeTree
@@ -966,6 +1115,11 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \tikzstyle{tbox}=[rectangle,text centered, text width=30mm]
 \tikzstyle{wbbox}=[rectangle, rounded corners=3pt, draw=black, top color=blue!50!white, bottom color=white, very thick, minimum height=12mm, inner sep=2pt, text centered, text width=30mm]""", file=fout)
 
+    print(r"\tikzstyle{dbox}=[rectangle, rounded corners=3pt, draw=black, top"
+          " color=green!50!white, bottom color=white, very thick,"
+          " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
+          "pt, text centered, text width=35mm]", file=fout)
+
     print(r"\tikzstyle{pbox}=[rectangle, rounded corners=3pt, draw=black, top"
           " color=yellow!50!white, bottom color=white, very thick,"
           " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
@@ -979,7 +1133,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
     print(r"\tikzstyle{tbox}=[rectangle, rounded corners=3pt, draw=black, top"
           " color=blue!50!white, bottom color=white, very thick,"
           " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
-          "pt, text centered, text width=35mm]", file=fout)
+          "pt, text centered, text width=44mm]", file=fout)
 
     print(r"\tikzstyle{gbox}=[rectangle, rounded corners=3pt, draw=black, top"
           " color=cyan!50!white, bottom color=white, very thick,"
@@ -1223,6 +1377,7 @@ parser.add_argument("--depth", help="make tree pdf stopping at depth ", type=int
 parser.add_argument("--land", help="make tree pdf landscape rather than portrait default portrait (1 to make full landscape, 2 mixed)", type=int, default=None)
 parser.add_argument("--team", help="Process team sheet and output FTE summary by institution", action="store_true")
 parser.add_argument("--team-sheet", help="Name of the team sheet (default: 'team')", default="team")
+parser.add_argument("--tree-sheet", help="Name of the tree sheet to process (e.g. 'Model!A1:H')")
 parser.add_argument("--institutions", help="Comma-separated list of institutions to track (default: SLAC,IN2P3,UK,AURA,UW,Princeton)",
                     default=",".join(DEFAULT_INSTITUTIONS))
 args = parser.parse_args()
@@ -1232,24 +1387,40 @@ land = args.land
 # Parse institutions list
 institutions = [inst.strip() for inst in args.institutions.split(',')]
 
-if args.team:
-    # Process team sheet
-    make_team_report(args.id, args.team_sheet, institutions)
-else:
-    # Original tree processing
-    if not args.sheets:
-        parser.error("sheets argument is required when not using --team")
+team_data = None
+dept_teams = None
 
+# Process team data if --team is specified
+if args.team:
+    print(f"Fetching team data from sheet: {args.team_sheet}")
+    team_result = get_sheet(args.id, args.team_sheet)
+    team_values = team_result.get('values', [])
+    if team_values:
+        team_data, dept_teams = process_team_sheet(team_values, institutions)
+        # If only --team (no tree sheet), output the FTE report
+        if not args.tree_sheet and not args.sheets:
+            output_team_report(team_data, dept_teams, institutions)
+
+# Process tree if --tree-sheet or positional sheets are specified
+if args.tree_sheet or args.sheets:
     if land is None:
         print('Output portrait')
     else:
         print('Output landscape ', land)
 
     sheetId = args.id
-    sheets = args.sheets
+    
+    # Use --tree-sheet if specified, otherwise use positional sheets
+    if args.tree_sheet:
+        sheets = [args.tree_sheet]
+    else:
+        sheets = args.sheets
+    
     for r in sheets:
         print("Google %s , Sheet %s" % (sheetId, r))
         result = get_sheet(sheetId, r)
         values = result.get('values', [])
-        makeTree(values)
+        makeTree(values, team_data, institutions if team_data else None)
+elif not args.team:
+    parser.error("Either --tree-sheet, sheets argument, or --team is required")
 

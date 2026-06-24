@@ -192,14 +192,14 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (2-Infra) [tbox,below=4pt of 2-FrDF] {\textbf{Infrastructures} };
 \node [below right] at (2-Infra.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-Infra.west); 
-\node (3-cdac) [tbox,right=15mm of 2-Infra] {\textbf{CDAC} };
-\node [below right] at (3-cdac.north west) {\small \color{blue}Team} ;
+\node (3-cdac) [pbox,right=15mm of 2-Infra] {\textbf{CDAC} };
+\node [below right] at (3-cdac.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-cdac.west); 
 \node (3-frdf) [tbox,below=4pt of 3-cdac] {\textbf{FrDF} };
 \node [below right] at (3-frdf.north west) {\small \color{blue}Team} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-frdf.west); 
-\node (3-sdf) [tbox,below=4pt of 3-frdf] {\textbf{SDF} };
-\node [below right] at (3-sdf.north west) {\small \color{blue}Team} ;
+\node (3-sdf) [pbox,below=4pt of 3-frdf] {\textbf{SDF} };
+\node [below right] at (3-sdf.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-sdf.west); 
 \node (3-ukdf) [tbox,below=4pt of 3-sdf] {\textbf{UKDF} };
 \node [below right] at (3-ukdf.north west) {\small \color{blue}Team} ;
