@@ -52,7 +52,7 @@ meta.tex: Makefile .FORCE
 
 
 teamtree:
-	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --team --team-sheet teams\!a8:d160 --land 2 --tree-sheet teamdiag\!A1:H 
+	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --team --team-sheet teams\!a5:d160 --land 2 --tree-sheet teamdiag\!A1:H 
 	pdflatex TeamTreeLand.tex
 tree:
 	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY FEver\!A1:H --depth=3

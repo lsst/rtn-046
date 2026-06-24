@@ -44,6 +44,7 @@ outdepth = 100  # set with --depth if you want a shallower tree
 # Global team data for including in tree diagrams
 g_team_data = None  # Dict {team_name: {institution: FTE, ...}, ...}
 g_institutions = None  # List of institution names for ordering
+g_rolled_up_totals = {}  # Dict {node_id: total_fte} - rolled up totals for each node
 
 
 def get_team_total_fte(orig_name):
@@ -66,6 +67,67 @@ def get_team_total_fte(orig_name):
             total = sum(fte_dict.values())
             return total
     return 0
+
+
+def calculate_rolled_up_totals(ptree):
+    """Calculate rolled-up FTE totals for all nodes in the tree.
+    
+    Each node's total is the sum of its own team FTE (if it's a Team)
+    plus all descendant totals.
+    
+    Args:
+        ptree: The product tree
+        
+    Returns:
+        Dict {node_id: total_fte}
+    """
+    global g_rolled_up_totals
+    g_rolled_up_totals = {}
+    
+    if not g_team_data:
+        return g_rolled_up_totals
+    
+    def calc_node_total(node_id):
+        """Recursively calculate total for a node."""
+        if node_id in g_rolled_up_totals:
+            return g_rolled_up_totals[node_id]
+        
+        node = ptree[node_id]
+        prod = node.data
+        
+        # Get this node's own FTE if it's a Team
+        own_fte = 0
+        if prod.type and prod.type.lower() == "team":
+            own_fte = get_team_total_fte(prod.orig_name)
+        
+        # Sum children's totals
+        children_total = 0
+        children = ptree.children(node_id)
+        for child in children:
+            children_total += calc_node_total(child.identifier)
+        
+        total = own_fte + children_total
+        g_rolled_up_totals[node_id] = total
+        return total
+    
+    # Start from root
+    root = ptree.root
+    if root:
+        calc_node_total(root)
+    
+    return g_rolled_up_totals
+
+
+def get_rolled_up_total(node_id):
+    """Get the rolled-up total for a node.
+    
+    Args:
+        node_id: Node identifier
+        
+    Returns:
+        Rolled-up FTE total, or 0 if not available
+    """
+    return g_rolled_up_totals.get(node_id, 0)
 
 
 def get_team_fte_label(orig_name, prod_type=""):
@@ -180,9 +242,13 @@ def constructTree(values, team_tree_mode=False):
     
     # In team tree mode, create a "top" root node first
     if team_tree_mode:
-        top_prod = Product("top", "Rubin Observatory", "", "", "", "", "")
-        ptree.create_node(top_prod.id, top_prod.id, data=top_prod)
-        print("top is root (team tree mode)")
+        aura = Product("aura", "AURA", "", "Managing Org.", "", "", "")
+        top_prod = Product("rubin", "Rubin Observatory", "aura", "", "", "", "")
+        top_NL = Product("NL", "NOIRLab", "aura", "", "", "", "")
+        ptree.create_node(aura.id, aura.id, data=aura)
+        ptree.create_node(top_prod.id, top_prod.id, data=top_prod, parent="aura")
+        ptree.create_node(top_NL.id, top_NL.id, data=top_NL, parent="aura")
+        print("aura is root (team tree mode)")
     
     for line in values:
         count = count + 1
@@ -219,8 +285,8 @@ def constructTree(values, team_tree_mode=False):
         if count == skip_to:  # first node from sheet
             if team_tree_mode:
                 # In team tree mode, first node is child of "top"
-                prod.parent = "top"
-                ptree.create_node(prod.id, prod.id, data=prod, parent="top")
+                prod.parent = "rubin"
+                ptree.create_node(prod.id, prod.id, data=prod, parent=prod.parent)
                 print(f"{id} is child of top (team tree mode)")
             else:
                 # Normal mode - first node is root
@@ -234,7 +300,7 @@ def constructTree(values, team_tree_mode=False):
                                   parent=prod.parent)
             elif team_tree_mode:
                 # In team tree mode, nodes with no parent become children of "top"
-                prod.parent = "top"
+                prod.parent = "rubin"
                 ptree.create_node(prod.id, prod.id, data=prod, parent="top")
                 print(f"{id} has no parent, assigned to top (team tree mode)")
             else:
@@ -304,9 +370,12 @@ def outputType(fout,prod):
         print(team_label, file=fout, end='')
     print("};", file=fout)
     if prod.type != "":
-        # For Team types, add total FTE in parentheses
-        if prod.type.lower() == "team" and g_team_data:
-            total_fte = get_team_total_fte(prod.orig_name)
+        # Add total FTE in parentheses - direct for Team, rolled-up for others
+        if g_team_data:
+            if prod.type.lower() == "team":
+                total_fte = get_team_total_fte(prod.orig_name)
+            else:
+                total_fte = get_rolled_up_total(prod.id)
             if total_fte > 0:
                 type_label = f"{prod.type} ({total_fte:.1f})"
             else:
@@ -993,6 +1062,10 @@ def makeTree(values, team_data=None, institutions=None):
     # need to skip a line or two
     team_tree_mode = team_data is not None
     ptree = constructTree(values, team_tree_mode)
+    
+    # Calculate rolled-up totals for all nodes
+    if team_tree_mode:
+        calculate_rolled_up_totals(ptree)
 
     paperwidth = 0
     height = 0
@@ -1049,7 +1122,7 @@ def makeTree(values, team_data=None, institutions=None):
     print('height:', height, '; width:', paperwidth)
 
     with open(nf, 'w') as fout:
-        header(fout, paperwidth, height)
+        header(fout, paperwidth, height, team_tree_mode)
         if (land==0):
             outputLandR2(fout, ntree, None, None, None)
         elif (land==1):
@@ -1155,10 +1228,19 @@ def theader(tout):
     return
 
 
-def header(fout, pwidth, pheight):
+def header(fout, pwidth, pheight, team_mode=False):
+    if team_mode:
+        doc_title = "Team org chart with FTE counts per institute"
+        pdf_title = "Team org chart"
+        pdf_subject = "Diagram illustrating team organization with FTE counts per institute"
+    else:
+        doc_title = "DM  operations product tree"
+        pdf_title = "DM products"
+        pdf_subject = "Diagram illustrating the products in LSST DM"
+    
     print(r"""%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Document:      DM  operations product tree
+% Document:      """ + doc_title + r"""
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass{article}
@@ -1174,8 +1256,7 @@ textwidth=30cm,textheight=50mm]{geometry}
 \newcommand\showpage{%
 \setlayoutscale{0.5}\setlabelfont{\tiny}\printheadingsfalse\printparametersfalse
 \currentpage\pagedesign}
-\hypersetup{pdftitle={DM products }, pdfsubject={Diagram illustrating the
-products in LSST DM }, pdfauthor={ William O'Mullane}}
+\hypersetup{pdftitle={""" + pdf_title + r"""}, pdfsubject={""" + pdf_subject + r"""}, pdfauthor={ William O'Mullane}}
 \tikzstyle{tbox}=[rectangle,text centered, text width=30mm]
 \tikzstyle{wbbox}=[rectangle, rounded corners=3pt, draw=black, top color=blue!50!white, bottom color=white, very thick, minimum height=12mm, inner sep=2pt, text centered, text width=30mm]""", file=fout)
 
