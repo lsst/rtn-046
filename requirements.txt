@@ -3,3 +3,4 @@ google-auth-httplib2
 google-auth-oauthlib  
 oauth2client
 treelib
+Setuptools<81
