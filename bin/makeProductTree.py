@@ -1062,8 +1062,10 @@ def makeTree(values, team_data=None, institutions=None):
             outputTexTree(fout, ntree, paperwidth)
         footer(fout)
 
-    # Skip productlist output in team tree mode
-    if not team_tree_mode:
+    # Output team CSV in team mode, productlist.tex otherwise
+    if team_tree_mode:
+        output_team_csv(ptree, "teamlist.csv")
+    else:
         with open(nt, 'w') as tout:
             theader(tout)
             outputTexTable(tout, ptree)
@@ -1071,6 +1073,68 @@ def makeTree(values, team_data=None, institutions=None):
 
     return
 # End makeTree
+
+
+def output_team_csv(ptree, filename):
+    """Output team data as CSV with institution FTE columns.
+    
+    Args:
+        ptree: The product tree
+        filename: Output CSV filename
+    """
+    if not g_team_data or not g_institutions:
+        print("No team data available for CSV output")
+        return
+    
+    print(f"Saving team list in: {filename}")
+    
+    with open(filename, 'w', newline='') as csvfile:
+        # Build header: ID, Name, Parent, Type, Manager, Owner, then institution columns, then Total
+        headers = ['ID', 'Name', 'Parent', 'Type', 'Manager', 'Owner'] + list(g_institutions) + ['Other', 'Total']
+        
+        # Write header
+        csvfile.write(','.join(headers) + '\n')
+        
+        # Iterate through tree nodes
+        nodes = ptree.expand_tree()
+        for n in nodes:
+            prod = ptree[n].data
+            
+            # Get team FTE data if available
+            team_fte = None
+            if prod.orig_name:
+                name_lower = prod.orig_name.lower()
+                for team_name, fte_dict in g_team_data.items():
+                    if team_name.lower() == name_lower:
+                        team_fte = fte_dict
+                        break
+            
+            # Build row
+            row = [
+                prod.id,
+                prod.orig_name or prod.name,
+                prod.parent,
+                prod.type,
+                prod.manager.replace(',', ';'),  # Escape commas
+                prod.owner.replace(',', ';'),
+            ]
+            
+            # Add institution FTEs
+            total = 0
+            for inst in g_institutions:
+                fte = team_fte.get(inst, 0) if team_fte else 0
+                row.append(f"{fte:.1f}" if fte > 0 else "0")
+                total += fte
+            
+            # Add Other and Total
+            other = team_fte.get('Other', 0) if team_fte else 0
+            total += other
+            row.append(f"{other:.1f}" if other > 0 else "0")
+            row.append(f"{total:.1f}" if total > 0 else "0")
+            
+            csvfile.write(','.join(row) + '\n')
+    
+    print(f"Team CSV written with {len(list(ptree.expand_tree()))} entries")
 
 
 def theader(tout):
