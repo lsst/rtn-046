@@ -35,7 +35,7 @@ leafHeight = 1.55  # cm space per leaf box .. height of page calc
 leafWidth = 6.2  # cm space per leaf box .. width of page calc
 smallGap = 0.2 # cm between leaf boxes in the same group
 bigGap = 0.3 # cm between different levels, or leaf boxes
-sep = 2  # inner sep
+sep = 3  # inner sep
 gap = 4
 WBS = 1  # Put WBS on diagram
 PKG = 1  # put packages on diagram
@@ -45,6 +45,7 @@ outdepth = 100  # set with --depth if you want a shallower tree
 g_team_data = None  # Dict {team_name: {institution: FTE, ...}, ...}
 g_institutions = None  # List of institution names for ordering
 g_rolled_up_totals = {}  # Dict {node_id: total_fte} - rolled up totals for each node
+g_box_heights = {}  # Dict {node_id: height_in_pt} - calculated box heights for page sizing
 
 
 def get_team_total_fte(orig_name):
@@ -128,6 +129,114 @@ def get_rolled_up_total(node_id):
         Rolled-up FTE total, or 0 if not available
     """
     return g_rolled_up_totals.get(node_id, 0)
+
+
+def calculate_box_height(prod, has_team_label):
+    """Calculate the minimum height for a box based on content.
+    
+    Args:
+        prod: Product object
+        has_team_label: Whether box has team FTE data
+        
+    Returns:
+        Height in pt, or None if default should be used
+    """
+    base_height = 35  # Default height in pt
+    
+    # Check if name wraps (text width is ~35mm, roughly 18-20 chars per line)
+    name_len = len(prod.name) if prod.name else 0
+    chars_per_line = 18
+    lines_needed = (name_len + chars_per_line - 1) // chars_per_line  # Ceiling division
+    
+    # Calculate height based on content
+    if has_team_label:
+        # Team boxes need more height: title + FTE line
+        height = 50 + max(0, (lines_needed - 1) * 12)  # Extra 12pt per wrapped line
+        
+        # Check if FTE line will wrap (more than 4 institutions with non-zero values)
+        if g_team_data and prod.orig_name:
+            name_lower = prod.orig_name.lower()
+            for team_name, fte_dict in g_team_data.items():
+                if team_name.lower() == name_lower:
+                    # Count non-zero institutions
+                    non_zero_count = sum(1 for v in fte_dict.values() if v > 0)
+                    if non_zero_count > 4:
+                        height += 12  # Extra line for wrapped FTE text
+                    break
+    elif lines_needed > 1:
+        # Long titles that wrap need more height
+        height = base_height + (lines_needed - 1) * 12
+    else:
+        height = None  # Use default
+    
+    return height
+
+
+def calculate_all_box_heights(ptree):
+    """Calculate and store box heights for all nodes in the tree.
+    
+    Args:
+        ptree: The product tree
+    """
+    global g_box_heights
+    g_box_heights = {}
+    
+    nodes = ptree.expand_tree()
+    for n in nodes:
+        prod = ptree[n].data
+        has_team_label = bool(get_team_fte_label(prod.orig_name, prod.type)) if g_team_data else False
+        height = calculate_box_height(prod, has_team_label)
+        if height:
+            g_box_heights[prod.id] = height
+        else:
+            g_box_heights[prod.id] = 35  # Default
+
+
+def get_total_tree_height(ptree):
+    """Get the total height needed for the tree based on calculated box heights.
+    
+    Args:
+        ptree: The product tree
+        
+    Returns:
+        Total height in cm
+    """
+    if not g_box_heights:
+        return 0
+    
+    # Sum heights and convert to cm (1pt = 0.0352778cm)
+    total_pt = sum(g_box_heights.values())
+    # Add spacing between boxes
+    num_boxes = len(g_box_heights)
+    spacing_pt = num_boxes * 15  # 15pt spacing per box
+    
+    total_cm = (total_pt + spacing_pt) * 0.0352778
+    return total_cm
+
+
+def get_subtree_height(ptree, node_id, default_height):
+    """Get the total height of all nodes below a node (for vertical stacking).
+    
+    Args:
+        ptree: The product tree
+        node_id: Node to get subtree height for
+        default_height: Default height to use if no box height recorded
+        
+    Returns:
+        Total height in pt
+    """
+    # Get all nodes in subtree (not just leaves)
+    subtree = ptree.subtree(node_id)
+    all_nodes = list(subtree.expand_tree())
+    
+    total = 0
+    for nid in all_nodes:
+        if nid == node_id:
+            continue  # Skip the root of subtree itself
+        node_data = subtree[nid].data
+        height = g_box_heights.get(node_data.id, default_height) if g_box_heights else default_height
+        total += height + gap + sep  # Add gap between each
+    return total + gap  # Extra gap at end
 
 
 def get_team_fte_label(orig_name, prod_type=""):
@@ -363,10 +472,11 @@ def outputTexTable(tout, ptree):
 
 
 def outputType(fout,prod):
-    # Add minimum height override for boxes with team FTE data
+    # Add minimum height override for boxes that need more space
     team_label = get_team_fte_label(prod.orig_name, prod.type)
-    if team_label and g_team_data:
-        print(", minimum height=50pt] {", file=fout, end='')
+    box_height = g_box_heights.get(prod.id, 35) if g_box_heights else 35
+    if box_height > 35:
+        print(f", minimum height={box_height}pt] {{", file=fout, end='')
     else:
         print("] {", file=fout, end='')
     print(r"\textbf{" + prod.name + "} ", file=fout, end='')
@@ -946,8 +1056,12 @@ def outputTexTreeP(fout, ptree, width, sib, full):
     count = 0
     prev = Product("n", "n", "n", "n", "n", "n", "n")
     nodec =1
-    # Text height + the gap added to each one
     blocksize = txtheight + gap + sep
+    # Text height + the gap added to each one
+    # In team mode, use larger blocksize to account for variable height boxes
+    if g_team_data and g_box_heights:
+        max_height = max(g_box_heights.values()) if g_box_heights else txtheight
+        blocksize = max_height + gap + sep
     for n in nodes:
         prod = ptree[n].data
         fnodes.append(prod)
@@ -986,16 +1100,11 @@ def outputTexTreeP(fout, ptree, width, sib, full):
                         psib = fnodes[scount]
                         leaves = ptree.leaves(psib.id)
                         depth = len(leaves) - 1
-                        lleaf = leaves[depth-1].data
-                        # print("Prev: {} psib: {} "
-                        #       "llead.parent: {}".format(prev.id, psib.id,
-                        #                                 lleaf.parent))
-                        ##if (lleaf.parent == psib.id):
-                        ##    depth = depth - 1
-                        # if (prod.id=="L2"):
-                        #     depth=depth + 1 # Not sure why this is one short
-                        # the number of leaves below my sibling
-                        dist = depth * blocksize + gap
+                        # Calculate distance based on actual heights of leaves below sibling
+                        if g_team_data and g_box_heights:
+                            dist = get_subtree_height(ptree, psib.id, blocksize)
+                        else:
+                            dist = depth * blocksize + gap
                         # print("{p.id} Depth: {} dist: {} blocksize: {}"
                         #       " siblin: {s.id}".format(depth, dist,
                         #                                s=psib, p=prod))
@@ -1065,9 +1174,10 @@ def makeTree(values, team_data=None, institutions=None):
     team_tree_mode = team_data is not None
     ptree = constructTree(values, team_tree_mode)
     
-    # Calculate rolled-up totals for all nodes
+    # Calculate rolled-up totals and box heights for all nodes
     if team_tree_mode:
         calculate_rolled_up_totals(ptree)
+        calculate_all_box_heights(ptree)
 
     paperwidth = 0
     height = 0
@@ -1084,11 +1194,12 @@ def makeTree(values, team_data=None, institutions=None):
     #print('>n2 - tree depth: ', n2, ntree.depth(), nMS)
 
     # Adjust box and page sizes for team mode
-    global txtheight, leafHeight, leafWidth
+    global txtheight, leafHeight, leafWidth, smallGap
     if team_tree_mode:
         txtheight = 35  # Default box height (individual boxes with team data get override)
-        leafHeight = 2.8  # Larger spacing for page height calc
+        leafHeight = 3.2  # Larger spacing for page height calc
         leafWidth = 6.9  # Larger spacing for page width calc
+        smallGap = 0.4  # Bigger gap between leaves for team mode
 
     # ptree.show(data_property="name")
     if (land==1):   #full landscape
@@ -1096,26 +1207,42 @@ def makeTree(values, team_data=None, institutions=None):
       tree_depth = ntree.depth()
       reduced_tree = slice(ntree, tree_depth -1)
       paperwidth = paperwidth + len(ntree.leaves()) * ( leafWidth + smallGap ) + len(reduced_tree.leaves()) * bigGap # cm
-      height = height + ( ntree.depth() + 1 ) * ( leafHeight + 1.5 )  # cm
+      if team_tree_mode and g_box_heights:
+          # Use actual box heights for team mode with extra buffer per level
+          height = height + ( ntree.depth() + 1 ) * ( leafHeight + 2.5 )
+      else:
+          height = height + ( ntree.depth() + 1 ) * ( leafHeight + 1.5 )  # cm
     elif (land==2):  #mixed landscape/portrait
       paperwidth = paperwidth + 6.2 * n2 + 0.7 # cm
-      height = height + nMS * leafHeight #1.6  # cm
+      if team_tree_mode and g_box_heights:
+          height = height + nMS * (leafHeight + 1.0)  # Extra buffer per leaf
+      else:
+          height = height + nMS * leafHeight #1.6  # cm
     elif (land==3):  #recursive landscape, same spacing
       # get the number of groups of leaves
       #print('-------------------------')
       nl = land_red_leaves(ntree)
       print('-------------------------', nl)
       paperwidth = paperwidth + nl  * ( leafWidth + smallGap ) # cm
-      height = height + ( ntree.depth() + 1 ) * ( leafHeight + 1.5 )  # cm
+      if team_tree_mode and g_box_heights:
+          height = height + ( ntree.depth() + 1 ) * ( leafHeight + 2.5 )
+      else:
+          height = height + ( ntree.depth() + 1 ) * ( leafHeight + 1.5 )  # cm
     elif (land==0):
       nl = land_red_leaves2(ntree, None)
       print('-------------------------', nl)
       paperwidth = paperwidth + nl  * ( leafWidth + smallGap ) # cm
-      height = height + ( ntree.depth() + 1 ) * ( leafHeight + 1.5 )  # cm
+      if team_tree_mode and g_box_heights:
+          height = height + ( ntree.depth() + 1 ) * ( leafHeight + 2.5 )
+      else:
+          height = height + ( ntree.depth() + 1 ) * ( leafHeight + 1.5 )  # cm
     else:
       paperwidth = paperwidth + ( ntree.depth() + 1 ) * ( leafWidth + bigGap ) # cm
       streew=paperwidth
-      height = len(ntree.leaves()) * leafHeight + 0.5 # cm
+      if team_tree_mode and g_box_heights:
+          height = len(ntree.leaves()) * (leafHeight + 1.0) + 0.5  # Extra buffer per leaf
+      else:
+          height = len(ntree.leaves()) * leafHeight + 0.5 # cm
 
     print('height:', height, '; width:', paperwidth)
 
