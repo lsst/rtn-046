@@ -32,9 +32,9 @@ APPLICATION_NAME = 'Rubin Product Tree from Google Sheet'
 # pt sizes for box + margin + gap between boex
 txtheight = 35
 leafHeight = 1.55  # cm space per leaf box .. height of page calc
-leafWidth = 4.9  # cm space per leaf box .. width of page calc
+leafWidth = 6.2  # cm space per leaf box .. width of page calc
 smallGap = 0.2 # cm between leaf boxes in the same group
-bigGap = 0.2 # cm between different levels, or leaf boxes
+bigGap = 0.3 # cm between different levels, or leaf boxes
 sep = 2  # inner sep
 gap = 4
 WBS = 1  # Put WBS on diagram
@@ -363,9 +363,13 @@ def outputTexTable(tout, ptree):
 
 
 def outputType(fout,prod):
-    print("] {", file=fout, end='')
-    print(r"\textbf{" + prod.name + "} ", file=fout, end='')
+    # Add minimum height override for boxes with team FTE data
     team_label = get_team_fte_label(prod.orig_name, prod.type)
+    if team_label and g_team_data:
+        print(", minimum height=50pt] {", file=fout, end='')
+    else:
+        print("] {", file=fout, end='')
+    print(r"\textbf{" + prod.name + "} ", file=fout, end='')
     if team_label:
         print(team_label, file=fout, end='')
     print("};", file=fout)
@@ -646,14 +650,12 @@ def outputLandR(fout, ptree, pid):
         prod = n.data
         stree = ptree.subtree(prod.id)
         sdepth = stree.depth()
+        btype = 'p'
+        if prod.type and len(prod.type) > 0:
+            btype = prod.type[0].lower()
         if (sib):
             sprevw = slice(prevw, sdepth) # Slice previus subtree that can acomodated with the actual one
-            nleaves = len(sprevw.leaves())
-            #nleaves = land_red_leaves(sprevw)
-            btype='p'
-            if prod.type and len(prod.type)>0:
-                btype=prod.type[0].lower()
-            #    print(nleaves, prod.name)
+            #nleaves = len(sprevw.leaves())
             #print('Previous tree:\n', sprevw)
             nl = land_red_leaves(sprevw)
             nleaves = nl
@@ -1084,13 +1086,9 @@ def makeTree(values, team_data=None, institutions=None):
     # Adjust box and page sizes for team mode
     global txtheight, leafHeight, leafWidth
     if team_tree_mode:
-        txtheight = 56  # Larger boxes for team info
+        txtheight = 35  # Default box height (individual boxes with team data get override)
         leafHeight = 2.8  # Larger spacing for page height calc
-        leafWidth = 5.9  # Larger spacing for page width calc
-    else:
-        txtheight = 35  # Default size
-        leafHeight = 1.55  # Default spacing
-        leafWidth = 4.9  # Default width
+        leafWidth = 6.9  # Larger spacing for page width calc
 
     # ptree.show(data_property="name")
     if (land==1):   #full landscape
@@ -1100,7 +1098,7 @@ def makeTree(values, team_data=None, institutions=None):
       paperwidth = paperwidth + len(ntree.leaves()) * ( leafWidth + smallGap ) + len(reduced_tree.leaves()) * bigGap # cm
       height = height + ( ntree.depth() + 1 ) * ( leafHeight + 1.5 )  # cm
     elif (land==2):  #mixed landscape/portrait
-      paperwidth = paperwidth + 5.2 * n2 + 0.7 # cm
+      paperwidth = paperwidth + 6.2 * n2 + 0.7 # cm
       height = height + nMS * leafHeight #1.6  # cm
     elif (land==3):  #recursive landscape, same spacing
       # get the number of groups of leaves
@@ -1263,7 +1261,7 @@ textwidth=30cm,textheight=50mm]{geometry}
     print(r"\tikzstyle{dbox}=[rectangle, rounded corners=3pt, draw=black, top"
           " color=green!50!white, bottom color=white, very thick,"
           " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
-          "pt, text centered, text width=35mm]", file=fout)
+          "pt, text centered, text width=45mm]", file=fout)
 
     print(r"\tikzstyle{pbox}=[rectangle, rounded corners=3pt, draw=black, top"
           " color=yellow!50!white, bottom color=white, very thick,"
@@ -1283,7 +1281,7 @@ textwidth=30cm,textheight=50mm]{geometry}
     print(r"\tikzstyle{gbox}=[rectangle, rounded corners=3pt, draw=black, top"
           " color=cyan!50!white, bottom color=white, very thick,"
           " minimum height=" + str(txtheight) + "pt, inner sep=" + str(sep) +
-          "pt, text centered, text width=35mm]", file=fout)
+          "pt, text centered, text width=45mm]", file=fout)
 
     print(r"""\tikzstyle{pline}=[-, thick]
 \begin{document}

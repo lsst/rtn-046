@@ -8,21 +8,21 @@
 \usepackage{tikz,hyperref,amsmath}
 \usetikzlibrary{positioning,arrows,shapes,decorations.shapes,shapes.arrows}
 \usetikzlibrary{backgrounds,calc}
-\usepackage[paperwidth=30.6cm,paperheight=174.1cm,
+\usepackage[paperwidth=39.0cm,paperheight=172.55cm,
 left=-2mm,top=3mm,bottom=0mm,right=0mm,
 noheadfoot,marginparwidth=0pt,includemp=false,
 textwidth=30cm,textheight=50mm]{geometry}
 \newcommand\showpage{%
 \setlayoutscale{0.5}\setlabelfont{\tiny}\printheadingsfalse\printparametersfalse
 \currentpage\pagedesign}
-\hypersetup{pdftitle={DM products }, pdfsubject={Diagram illustrating the
-products in LSST DM }, pdfauthor={ William O'Mullane}}
+\hypersetup{pdftitle={DM products}, pdfsubject={Diagram illustrating the products in LSST DM}, pdfauthor={ William O'Mullane}}
 \tikzstyle{tbox}=[rectangle,text centered, text width=30mm]
 \tikzstyle{wbbox}=[rectangle, rounded corners=3pt, draw=black, top color=blue!50!white, bottom color=white, very thick, minimum height=12mm, inner sep=2pt, text centered, text width=30mm]
+\tikzstyle{dbox}=[rectangle, rounded corners=3pt, draw=black, top color=green!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=45mm]
 \tikzstyle{pbox}=[rectangle, rounded corners=3pt, draw=black, top color=yellow!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=35mm]
 \tikzstyle{abox}=[rectangle, rounded corners=3pt, draw=black, top color=green!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=35mm]
-\tikzstyle{tbox}=[rectangle, rounded corners=3pt, draw=black, top color=blue!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=35mm]
-\tikzstyle{gbox}=[rectangle, rounded corners=3pt, draw=black, top color=cyan!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=35mm]
+\tikzstyle{tbox}=[rectangle, rounded corners=3pt, draw=black, top color=blue!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=44mm]
+\tikzstyle{gbox}=[rectangle, rounded corners=3pt, draw=black, top color=cyan!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=45mm]
 \tikzstyle{pline}=[-, thick]
 \begin{document}
 \begin{tikzpicture}[node distance=0mm]
@@ -30,11 +30,11 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (1-DA) [gbox,right=15mm of 0-DM] {\textbf{Data Abstraction} };
 \node [below right] at (1-DA.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DA.west); 
-\node (2-Build) [abox,right=15mm of 1-DA] {\textbf{Build Engineering} };
-\node [below right] at (2-Build.north west) {\small \color{blue}Activity} ;
+\node (2-Build) [tbox,right=15mm of 1-DA] {\textbf{Build Engineering} };
+\node [below right] at (2-Build.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-Build.west); 
-\node (2-DataEng) [abox,below=4pt of 2-Build] {\textbf{Data Eng} };
-\node [below right] at (2-DataEng.north west) {\small \color{blue}Activity} ;
+\node (2-DataEng) [tbox,below=4pt of 2-Build] {\textbf{Data Eng} };
+\node [below right] at (2-DataEng.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-DataEng.west); 
 \node (3-felis) [pbox,right=15mm of 2-DataEng] {\textbf{Felis} };
 \node [below right] at (3-felis.north west) {\small \color{blue}Product} ;
@@ -42,8 +42,8 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-meta) [abox,below=4pt of 3-felis] {\textbf{Metadata} };
 \node [below right] at (3-meta.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-DataEng.east) -| ++(0.4,0) |- (3-meta.west); 
-\node (2-Middle) [abox,below=45pt of 2-DataEng] {\textbf{Pipe Middleware} };
-\node [below right] at (2-Middle.north west) {\small \color{blue}Activity} ;
+\node (2-Middle) [tbox,below=45pt of 2-DataEng] {\textbf{Pipe Middleware} };
+\node [below right] at (2-Middle.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-Middle.west); 
 \node (2-SingleExec) [pbox,right=15mm of 2-Middle] {\textbf{Sis Exec} };
 \node [below right] at (2-SingleExec.north west) {\small \color{blue}Product} ;
@@ -189,28 +189,22 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (2-FrDF) [gbox,below=660pt of 2-Curation] {\textbf{FrDF} };
 \node [below right] at (2-FrDF.north west) {\small \color{blue}Group} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-FrDF.west); 
-\node (2-Infra) [tbox,below=4pt of 2-FrDF] {\textbf{Infrastructures} };
-\node [below right] at (2-Infra.north west) {\small \color{blue}Team} ;
+\node (3-frdf) [tbox,right=15mm of 2-FrDF] {\textbf{FrDF} };
+\node [below right] at (3-frdf.north west) {\small \color{blue}Team} ;
+ \draw[pline] (2-FrDF.east) -| ++(0.4,0) |- (3-frdf.west); 
+\node (2-Infra) [gbox,below=4pt of 2-FrDF] {\textbf{Infrastructures} };
+\node [below right] at (2-Infra.north west) {\small \color{blue}Group} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-Infra.west); 
 \node (3-cdac) [pbox,right=15mm of 2-Infra] {\textbf{CDAC} };
 \node [below right] at (3-cdac.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-cdac.west); 
-\node (3-frdf) [tbox,below=4pt of 3-cdac] {\textbf{FrDF} };
-\node [below right] at (3-frdf.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-frdf.west); 
-\node (3-sdf) [pbox,below=4pt of 3-frdf] {\textbf{SDF} };
+\node (3-sdf) [pbox,below=4pt of 3-cdac] {\textbf{SDF} };
 \node [below right] at (3-sdf.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-sdf.west); 
-\node (3-ukdf) [tbox,below=4pt of 3-sdf] {\textbf{UKDF} };
-\node [below right] at (3-ukdf.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-ukdf.west); 
-\node (3-usdf) [tbox,below=4pt of 3-ukdf] {\textbf{USDF} };
-\node [below right] at (3-usdf.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-usdf.west); 
-\node (tembargo) [pbox,below=4pt of 3-usdf] {\textbf{trans embargo} };
+\node (tembargo) [pbox,below=4pt of 3-sdf] {\textbf{trans embargo} };
 \node [below right] at (tembargo.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (tembargo.west); 
-\node (2-MultiExec) [abox,below=209pt of 2-Infra] {\textbf{Multi-site \&  User Exec} };
+\node (2-MultiExec) [abox,below=86pt of 2-Infra] {\textbf{Multi-site \&  User Exec} };
 \node [below right] at (2-MultiExec.north west) {\small \color{blue}Activity} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-MultiExec.west); 
 \node (3-Panda) [pbox,right=15mm of 2-MultiExec] {\textbf{PanDA} };
@@ -225,13 +219,22 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (2-UKDF) [gbox,below=45pt of 2-MultiExec] {\textbf{UKDF} };
 \node [below right] at (2-UKDF.north west) {\small \color{blue}Group} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-UKDF.west); 
+\node (3-ukdf) [tbox,right=15mm of 2-UKDF] {\textbf{UKDF} };
+\node [below right] at (3-ukdf.north west) {\small \color{blue}Team} ;
+ \draw[pline] (2-UKDF.east) -| ++(0.4,0) |- (3-ukdf.west); 
 \node (2-USDF) [gbox,below=4pt of 2-UKDF] {\textbf{USDF} };
 \node [below right] at (2-USDF.north west) {\small \color{blue}Group} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-USDF.west); 
 \node (2-stackm) [abox,right=15mm of 2-USDF] {\textbf{Stack maint} };
 \node [below right] at (2-stackm.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-USDF.east) -| ++(0.4,0) |- (2-stackm.west); 
-\node (1-DMSCI) [gbox,below=1111pt of 1-DF] {\textbf{DM Science} };
+\node (3-usdf) [tbox,below=4pt of 2-stackm] {\textbf{USDF} };
+\node [below right] at (3-usdf.north west) {\small \color{blue}Team} ;
+ \draw[pline] (2-USDF.east) -| ++(0.4,0) |- (3-usdf.west); 
+\node (1-DMM) [tbox,below=1029pt of 1-DF] {\textbf{DM Managent} };
+\node [below right] at (1-DMM.north west) {\small \color{blue}Team} ;
+ \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DMM.west); 
+\node (1-DMSCI) [gbox,below=4pt of 1-DMM] {\textbf{DM Science} };
 \node [below right] at (1-DMSCI.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DMSCI.west); 
 \node (2-CST) [tbox,right=15mm of 1-DMSCI] {\textbf{CST} };
