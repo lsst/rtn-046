@@ -52,12 +52,13 @@ meta.tex: Makefile .FORCE
 
 
 teamreport:
-	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --team --team-sheet teams\!a5:d160 
+	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --staff-sheet "staff!A:Z"
+	#python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --team --team-sheet teams\!a5:d160 
 
 teamtree:
-	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --land 2 --team --team-sheet teams\!a5:d160 --tree-sheet teamdiag\!A1:H 
+	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --land 2 --team "staff!A:Z" --nl "NL!A1:Z5" --tree-sheet teamdiag\!A1:H 
 	pdflatex TeamTreeLand.tex
-	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --team --team-sheet teams\!a5:d160 --tree-sheet teamdiag\!A1:H 
+	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --team staff\!A:Z --nl "NL!A1:Z5" --tree-sheet teamdiag\!A1:H 
 	pdflatex TeamTree.tex
 tree:
 	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY FEver\!A1:H --depth=3

@@ -43,8 +43,10 @@ outdepth = 100  # set with --depth if you want a shallower tree
 
 # Global team data for including in tree diagrams
 g_team_data = None  # Dict {team_name: {institution: FTE, ...}, ...}
+g_team_people = None  # Dict {team_name: {institution: count, ...}, ...} - unique people per team
 g_institutions = None  # List of institution names for ordering
 g_rolled_up_totals = {}  # Dict {node_id: total_fte} - rolled up totals for each node
+g_rolled_up_people = {}  # Dict {node_id: total_people} - rolled up headcounts for each node
 g_box_heights = {}  # Dict {node_id: height_in_pt} - calculated box heights for page sizing
 
 
@@ -70,10 +72,32 @@ def get_team_total_fte(orig_name):
     return 0
 
 
-def calculate_rolled_up_totals(ptree):
-    """Calculate rolled-up FTE totals for all nodes in the tree.
+def get_team_total_people(orig_name):
+    """Get total unique people for a team.
     
-    Each node's total is the sum of its own team FTE (if it's a Team)
+    Args:
+        orig_name: Original (unescaped) product name to look up in team people data
+        
+    Returns:
+        Total people count as int, or 0 if no data
+    """
+    if not g_team_people:
+        return 0
+    
+    # Try to find matching team data (case-insensitive match)
+    name_lower = orig_name.lower()
+    for team_name, ppl_dict in g_team_people.items():
+        if team_name.lower() == name_lower:
+            # Sum all institution people counts
+            total = sum(ppl_dict.values())
+            return total
+    return 0
+
+
+def calculate_rolled_up_totals(ptree):
+    """Calculate rolled-up FTE totals and people counts for all nodes in the tree.
+    
+    Each node's total is the sum of its own team FTE/people (if it's a Team)
     plus all descendant totals.
     
     Args:
@@ -82,34 +106,42 @@ def calculate_rolled_up_totals(ptree):
     Returns:
         Dict {node_id: total_fte}
     """
-    global g_rolled_up_totals
+    global g_rolled_up_totals, g_rolled_up_people
     g_rolled_up_totals = {}
+    g_rolled_up_people = {}
     
     if not g_team_data:
         return g_rolled_up_totals
     
     def calc_node_total(node_id):
-        """Recursively calculate total for a node."""
+        """Recursively calculate total FTE and people for a node."""
         if node_id in g_rolled_up_totals:
-            return g_rolled_up_totals[node_id]
+            return g_rolled_up_totals[node_id], g_rolled_up_people.get(node_id, 0)
         
         node = ptree[node_id]
         prod = node.data
         
-        # Get this node's own FTE if it's a Team
+        # Get this node's own FTE and people if it's a Team
         own_fte = 0
+        own_people = 0
         if prod.type and prod.type.lower() == "team":
             own_fte = get_team_total_fte(prod.orig_name)
+            own_people = get_team_total_people(prod.orig_name)
         
         # Sum children's totals
-        children_total = 0
+        children_total_fte = 0
+        children_total_people = 0
         children = ptree.children(node_id)
         for child in children:
-            children_total += calc_node_total(child.identifier)
+            child_fte, child_people = calc_node_total(child.identifier)
+            children_total_fte += child_fte
+            children_total_people += child_people
         
-        total = own_fte + children_total
-        g_rolled_up_totals[node_id] = total
-        return total
+        total_fte = own_fte + children_total_fte
+        total_people = own_people + children_total_people
+        g_rolled_up_totals[node_id] = total_fte
+        g_rolled_up_people[node_id] = total_people
+        return total_fte, total_people
     
     # Start from root
     root = ptree.root
@@ -120,15 +152,15 @@ def calculate_rolled_up_totals(ptree):
 
 
 def get_rolled_up_total(node_id):
-    """Get the rolled-up total for a node.
+    """Get the rolled-up FTE total and people count for a node.
     
     Args:
         node_id: Node identifier
         
     Returns:
-        Rolled-up FTE total, or 0 if not available
+        Tuple of (FTE total, people count), or (0, 0) if not available
     """
-    return g_rolled_up_totals.get(node_id, 0)
+    return g_rolled_up_totals.get(node_id, 0), g_rolled_up_people.get(node_id, 0)
 
 
 def calculate_box_height(prod, has_team_label):
@@ -143,7 +175,7 @@ def calculate_box_height(prod, has_team_label):
     """
     base_height = 35  # Default height in pt
     
-    # Check if name wraps (text width is ~35mm, roughly 18-20 chars per line)
+    # Check if name wraps (text width is ~35-44mm, roughly 18-22 chars per line)
     name_len = len(prod.name) if prod.name else 0
     chars_per_line = 18
     lines_needed = (name_len + chars_per_line - 1) // chars_per_line  # Ceiling division
@@ -153,15 +185,26 @@ def calculate_box_height(prod, has_team_label):
         # Team boxes need more height: title + FTE line
         height = 50 + max(0, (lines_needed - 1) * 12)  # Extra 12pt per wrapped line
         
-        # Check if FTE line will wrap (more than 4 institutions with non-zero values)
+        # Check if FTE line will wrap based on actual text length
         if g_team_data and prod.orig_name:
             name_lower = prod.orig_name.lower()
             for team_name, fte_dict in g_team_data.items():
                 if team_name.lower() == name_lower:
-                    # Count non-zero institutions
+                    # Calculate actual FTE label length
+                    # Format: "INST:X.X(N), " - about 12-15 chars per institution with people
+                    # Box text width is ~44mm which is roughly 25-28 chars
                     non_zero_count = sum(1 for v in fte_dict.values() if v > 0)
-                    if non_zero_count > 4:
-                        height += 12  # Extra line for wrapped FTE text
+                    if g_team_people:
+                        # With people counts: "SLAC:2.0(2), " ~13 chars each
+                        chars_per_inst = 13
+                    else:
+                        # Without people counts: "SLAC:2.0, " ~10 chars each
+                        chars_per_inst = 10
+                    total_fte_chars = non_zero_count * chars_per_inst
+                    fte_chars_per_line = 28  # ~44mm text width
+                    fte_lines = (total_fte_chars + fte_chars_per_line - 1) // fte_chars_per_line
+                    if fte_lines > 1:
+                        height += (fte_lines - 1) * 12  # Extra 12pt per wrapped FTE line
                     break
     elif lines_needed > 1:
         # Long titles that wrap need more height
@@ -258,26 +301,38 @@ def get_team_fte_label(orig_name, prod_type=""):
     
     # Try to find matching team data (case-insensitive match)
     team_fte = None
+    team_ppl = None
     name_lower = orig_name.lower()
     for team_name, fte_dict in g_team_data.items():
         if team_name.lower() == name_lower:
             team_fte = fte_dict
+            # Also get people counts if available
+            if g_team_people:
+                team_ppl = g_team_people.get(team_name, {})
             break
     
     if not team_fte:
         return ""
     
-    # Format FTEs for display
+    # Format FTEs for display - include people count if available
     parts = []
     for inst in g_institutions:
         fte = team_fte.get(inst, 0)
         if fte > 0:
-            parts.append(f"{inst}:{fte:.1f}")
+            if team_ppl:
+                ppl = team_ppl.get(inst, 0)
+                parts.append(f"{inst}:{fte:.1f}({ppl})")
+            else:
+                parts.append(f"{inst}:{fte:.1f}")
     
     # Add 'Other' if present
     other = team_fte.get('Other', 0)
     if other > 0:
-        parts.append(f"Oth:{other:.1f}")
+        if team_ppl:
+            other_ppl = team_ppl.get('Other', 0)
+            parts.append(f"Oth:{other:.1f}({other_ppl})")
+        else:
+            parts.append(f"Oth:{other:.1f}")
     
     if parts:
         return r" \\ \scriptsize " + ", ".join(parts)
@@ -485,13 +540,18 @@ def outputType(fout,prod):
     print("};", file=fout)
     if prod.type != "":
         # Add total FTE in parentheses - direct for Team, rolled-up for others
+        # Include people count if available
         if g_team_data:
             if prod.type.lower() == "team":
                 total_fte = get_team_total_fte(prod.orig_name)
+                total_people = get_team_total_people(prod.orig_name)
             else:
-                total_fte = get_rolled_up_total(prod.id)
+                total_fte, total_people = get_rolled_up_total(prod.id)
             if total_fte > 0:
-                type_label = f"{prod.type} ({total_fte:.1f})"
+                if g_team_people and total_people > 0:
+                    type_label = f"{prod.type} ({total_fte:.1f}/{total_people})"
+                else:
+                    type_label = f"{prod.type} ({total_fte:.1f})"
             else:
                 type_label = prod.type
             print(r"\node [below right] at ({p.id}.north west) {{\small \color{{blue}}{label}}} ;".format(p=prod, label=type_label), file=fout)
@@ -1150,17 +1210,19 @@ def mixTreeDim(ptree):
     #    if depth == 1:
     return (n2l, nmaxSub)
 
-def makeTree(values, team_data=None, institutions=None):
+def makeTree(values, team_data=None, institutions=None, team_people=None):
     """This processes the google sheet produces a tex tree diagram and a tex longtable.
     
     Args:
         values: List of rows from the Google Sheet
         team_data: Optional dict {team_name: {institution: FTE_total, ...}, ...}
         institutions: Optional list of institution names for ordering
+        team_people: Optional dict {team_name: {institution: count, ...}, ...} - unique people per team
     """
-    global g_team_data, g_institutions
+    global g_team_data, g_institutions, g_team_people
     g_team_data = team_data
     g_institutions = institutions
+    g_team_people = team_people
     
     # Use TeamTree filename when team data is included
     base_name = "TeamTree" if team_data else "ProductTree"
@@ -1434,28 +1496,43 @@ def tfooter(tout):
 DEFAULT_INSTITUTIONS = ['SLAC', 'IN2P3', 'UK', 'AURA', 'UW', 'Princeton']
 
 
-def process_team_sheet(values, institutions):
+def process_staff_sheet(values, institutions, fte_column='U'):
     """
-    Process team sheet data and calculate FTE totals per team by institution.
+    Process staff sheet data and calculate FTE totals per team by institution.
+    Also counts unique individuals per team and department.
 
-    Handles pivot table format where department/team names only appear on first row,
-    and subsequent rows for same team have empty department/team columns.
+    Staff sheet columns:
+        C (index 2): Department name
+        D (index 3): Team Name
+        H (index 7): Person's name
+        K (index 10): Institution
+        FTE column (default U, index 20): FTE value
 
     Args:
         values: List of rows from the Google Sheet
         institutions: List of institution names to track individually (others become 'Other')
+        fte_column: Column letter for FTE values (default 'U' for FY26)
 
     Returns:
-        tuple: (team_data, dept_teams)
+        tuple: (team_data, dept_teams, team_people, dept_people)
             team_data: {team_name: {institution: FTE_total, ...}, ...}
             dept_teams: {department: [team_name, ...], ...} - preserves order
+            team_people: {team_name: {institution: count, ...}, ...} - unique people per team/institution
+            dept_people: {department: {institution: count, ...}, ...} - unique people per dept/institution
     """
+    # Convert column letter to index (A=0, B=1, etc.)
+    fte_col_idx = ord(fte_column.upper()) - ord('A')
+
     team_data = {}
     dept_teams = {}  # Maps department to list of teams (in order)
+    
+    # Track unique people per team per institution
+    team_people_set = {}  # {team_name: {institution: set(person_names), ...}, ...}
+    # Track unique people per department per institution
+    dept_people_set = {}  # {department: {institution: set(person_names), ...}, ...}
+
     skip_to = 2  # Skip header row
     count = 0
-    current_dept = None  # Track current department for pivot table format
-    current_team = None  # Track current team for pivot table format
 
     # Create case-insensitive lookup for institutions
     inst_lookup = {inst.lower(): inst for inst in institutions}
@@ -1465,88 +1542,176 @@ def process_team_sheet(values, institutions):
         if count < skip_to:
             continue
 
-        # Column A (index 0): department
-        # Column B (index 1): team name
-        # Column C (index 2): institution
-        # Column D (index 3): FTE
-        if len(row) < 4:
+        # Need at least enough columns for FTE
+        if len(row) <= fte_col_idx:
             continue
 
-        dept_cell = row[0].strip() if len(row) > 0 and row[0] else ""
-        team_name_cell = row[1].strip() if len(row) > 1 and row[1] else ""
-        institution_raw = row[2].strip() if len(row) > 2 and row[2] else ""
-        fte_str = row[3].strip() if len(row) > 3 and row[3] else "0"
+        # Column C (index 2): department
+        # Column D (index 3): team name
+        # Column H (index 7): person's name
+        # Column K (index 10): institution
+        dept_cell = row[2].strip() if len(row) > 2 and row[2] else ""
+        team_name = row[3].strip() if len(row) > 3 and row[3] else ""
+        person_name = row[7].strip() if len(row) > 7 and row[7] else ""
+        institution_raw = row[10].strip() if len(row) > 10 and row[10] else ""
+        fte_str = row[fte_col_idx].strip() if row[fte_col_idx] else "0"
 
-        # Update current department if we have a new one
-        if dept_cell and 'Total' not in dept_cell:
-            current_dept = dept_cell
-
-        # Skip "Total" rows and invalid entries
-        if 'Total' in team_name_cell or team_name_cell in ['#N/A', '']:
-            # If team name is empty but we have institution, use current_team
-            if team_name_cell == '' and institution_raw and current_team:
-                team_name = current_team
-            else:
-                # Reset current team on total rows or skip
-                if 'Total' in team_name_cell:
-                    current_team = None
-                continue
-        else:
-            # New team name found
-            team_name = team_name_cell
-            current_team = team_name
-
-            # Track team under its department
-            if current_dept:
-                if current_dept not in dept_teams:
-                    dept_teams[current_dept] = []
-                if team_name not in dept_teams[current_dept]:
-                    dept_teams[current_dept].append(team_name)
-
-        if not institution_raw:
+        # Skip empty or invalid rows
+        if not dept_cell or not team_name or not person_name:
             continue
 
+        # Skip "Total" rows
+        if 'Total' in dept_cell or 'Total' in team_name:
+            continue
+
+        # Parse FTE value
         try:
-            fte = float(fte_str)
+            fte = float(fte_str) if fte_str else 0.0
         except ValueError:
-            print(f"Warning: Could not parse FTE value '{fte_str}' for team '{team_name}'")
-            continue
+            fte = 0.0
 
         # Normalize institution - case-insensitive match
-        institution_lower = institution_raw.lower()
+        institution_lower = institution_raw.lower() if institution_raw else ""
         if institution_lower in inst_lookup:
             institution = inst_lookup[institution_lower]
         else:
             institution = 'Other'
 
-        # Initialize team if not seen
+        # Track team under its department
+        if dept_cell not in dept_teams:
+            dept_teams[dept_cell] = []
+        if team_name not in dept_teams[dept_cell]:
+            dept_teams[dept_cell].append(team_name)
+
+        # Initialize team data if not seen
         if team_name not in team_data:
             team_data[team_name] = {inst: 0.0 for inst in institutions}
             team_data[team_name]['Other'] = 0.0
+            team_people_set[team_name] = {inst: set() for inst in institutions}
+            team_people_set[team_name]['Other'] = set()
+
+        # Initialize department people tracking if not seen
+        if dept_cell not in dept_people_set:
+            dept_people_set[dept_cell] = {inst: set() for inst in institutions}
+            dept_people_set[dept_cell]['Other'] = set()
 
         # Add FTE to the appropriate institution
         team_data[team_name][institution] += fte
 
-    return team_data, dept_teams
+        # Track unique person for this team and institution
+        if person_name:
+            team_people_set[team_name][institution].add(person_name)
+            # Also track at department level (avoids double counting across teams)
+            dept_people_set[dept_cell][institution].add(person_name)
+
+    # Convert sets to counts
+    team_people = {}
+    for team_name, inst_sets in team_people_set.items():
+        team_people[team_name] = {inst: len(names) for inst, names in inst_sets.items()}
+
+    dept_people = {}
+    for dept, inst_sets in dept_people_set.items():
+        dept_people[dept] = {inst: len(names) for inst, names in inst_sets.items()}
+
+    return team_data, dept_teams, team_people, dept_people
 
 
-def output_team_report(team_data, dept_teams, institutions):
+def merge_staff_data(base_data, new_data, institutions):
+    """Merge staff data from two sheets into one set of dictionaries.
+    
+    Args:
+        base_data: Tuple (team_data, dept_teams, team_people, dept_people) from first sheet
+        new_data: Tuple (team_data, dept_teams, team_people, dept_people) from second sheet
+        institutions: List of institution names
+        
+    Returns:
+        Merged tuple (team_data, dept_teams, team_people, dept_people)
+    """
+    base_team_data, base_dept_teams, base_team_people, base_dept_people = base_data
+    new_team_data, new_dept_teams, new_team_people, new_dept_people = new_data
+    
+    # Merge team_data - add FTEs for same teams
+    for team_name, fte_dict in new_team_data.items():
+        if team_name in base_team_data:
+            # Add FTEs to existing team
+            for inst, fte in fte_dict.items():
+                base_team_data[team_name][inst] = base_team_data[team_name].get(inst, 0.0) + fte
+        else:
+            # New team - initialize with all institutions
+            base_team_data[team_name] = {inst: 0.0 for inst in institutions}
+            base_team_data[team_name]['Other'] = 0.0
+            for inst, fte in fte_dict.items():
+                base_team_data[team_name][inst] = fte
+    
+    # Merge dept_teams - add teams to departments
+    for dept, teams in new_dept_teams.items():
+        if dept in base_dept_teams:
+            # Add any new teams to existing department
+            for team in teams:
+                if team not in base_dept_teams[dept]:
+                    base_dept_teams[dept].append(team)
+        else:
+            # New department
+            base_dept_teams[dept] = teams
+    
+    # Merge team_people - add people counts for same teams
+    if new_team_people:
+        if base_team_people is None:
+            base_team_people = {}
+        for team_name, ppl_dict in new_team_people.items():
+            if team_name in base_team_people:
+                # Add people counts to existing team
+                for inst, count in ppl_dict.items():
+                    base_team_people[team_name][inst] = base_team_people[team_name].get(inst, 0) + count
+            else:
+                # New team
+                base_team_people[team_name] = {inst: 0 for inst in institutions}
+                base_team_people[team_name]['Other'] = 0
+                for inst, count in ppl_dict.items():
+                    base_team_people[team_name][inst] = count
+    
+    # Merge dept_people - add people counts for same departments
+    if new_dept_people:
+        if base_dept_people is None:
+            base_dept_people = {}
+        for dept, ppl_dict in new_dept_people.items():
+            if dept in base_dept_people:
+                # Add people counts to existing department
+                for inst, count in ppl_dict.items():
+                    base_dept_people[dept][inst] = base_dept_people[dept].get(inst, 0) + count
+            else:
+                # New department
+                base_dept_people[dept] = {inst: 0 for inst in institutions}
+                base_dept_people[dept]['Other'] = 0
+                for inst, count in ppl_dict.items():
+                    base_dept_people[dept][inst] = count
+    
+    return base_team_data, base_dept_teams, base_team_people, base_dept_people
+
+
+def output_team_report(team_data, dept_teams, institutions, team_people=None, dept_people=None):
     """
     Output FTE totals per team by institution, grouped by department with subtotals.
+    If people counts are provided, shows them in parentheses after FTE values.
 
     Args:
         team_data: dict {team_name: {institution: FTE_total, ...}, ...}
         dept_teams: dict {department: [team_name, ...], ...}
         institutions: List of institution names
+        team_people: dict {team_name: {institution: count, ...}, ...} - optional people counts per team
+        dept_people: dict {department: {institution: count, ...}, ...} - optional people counts per dept
     """
+    # Column width depends on whether we have people counts
+    col_width = 14 if team_people else 10
+
     # Build header
     all_cols = institutions + ['Other', 'Total']
-    header = f"{'Team':<40} " + " ".join(f"{inst:>10}" for inst in all_cols)
+    header = f"{'Team':<40} " + " ".join(f"{inst:>{col_width}}" for inst in all_cols)
     sep_line = "=" * len(header)
     dash_line = "-" * len(header)
 
     print("\n" + sep_line)
-    print("Team FTE Summary by Institution")
+    print("Team FTE Summary by Institution" + (" (with headcount)" if team_people else ""))
     print(sep_line)
     print(header)
     print(dash_line)
@@ -1555,6 +1720,9 @@ def output_team_report(team_data, dept_teams, institutions):
     grand_totals = {inst: 0.0 for inst in institutions}
     grand_totals['Other'] = 0.0
     grand_total = 0.0
+    # Grand people totals (track unique people across all depts - need to dedupe)
+    grand_people = {inst: 0 for inst in institutions}
+    grand_people['Other'] = 0
 
     # Process each department
     for dept in dept_teams:
@@ -1577,62 +1745,79 @@ def output_team_report(team_data, dept_teams, institutions):
             row_total = sum(data.values())
             dept_total += row_total
 
+            # Get people counts for this team if available
+            people_data = team_people.get(team_name, {}) if team_people else {}
+            row_people_total = sum(people_data.values()) if people_data else 0
+
             # Build row
             values = []
             for inst in institutions:
                 val = data.get(inst, 0.0)
                 dept_totals[inst] += val
-                values.append(f"{val:>10.2f}")
+                if team_people and people_data:
+                    ppl = people_data.get(inst, 0)
+                    values.append(f"{val:>6.2f} ({ppl:>2})")
+                else:
+                    values.append(f"{val:>{col_width}.2f}")
             other_val = data.get('Other', 0.0)
             dept_totals['Other'] += other_val
-            values.append(f"{other_val:>10.2f}")
-            values.append(f"{row_total:>10.2f}")
+            if team_people and people_data:
+                other_ppl = people_data.get('Other', 0)
+                values.append(f"{other_val:>6.2f} ({other_ppl:>2})")
+                values.append(f"{row_total:>6.2f} ({row_people_total:>2})")
+            else:
+                values.append(f"{other_val:>{col_width}.2f}")
+                values.append(f"{row_total:>{col_width}.2f}")
 
             print(f"    {team_name:<36} " + " ".join(values))
 
         # Print department subtotal
         dept_row = []
+        # Get department people counts if available
+        dept_ppl_data = dept_people.get(dept, {}) if dept_people else {}
+        dept_ppl_total = sum(dept_ppl_data.values()) if dept_ppl_data else 0
+
         for inst in institutions:
             grand_totals[inst] += dept_totals[inst]
-            dept_row.append(f"{dept_totals[inst]:>10.2f}")
+            if dept_people and dept_ppl_data:
+                ppl = dept_ppl_data.get(inst, 0)
+                grand_people[inst] += ppl
+                dept_row.append(f"{dept_totals[inst]:>6.2f} ({ppl:>2})")
+            else:
+                dept_row.append(f"{dept_totals[inst]:>{col_width}.2f}")
         grand_totals['Other'] += dept_totals['Other']
-        dept_row.append(f"{dept_totals['Other']:>10.2f}")
+        if dept_people and dept_ppl_data:
+            other_ppl = dept_ppl_data.get('Other', 0)
+            grand_people['Other'] += other_ppl
+            dept_row.append(f"{dept_totals['Other']:>6.2f} ({other_ppl:>2})")
+            dept_row.append(f"{dept_total:>6.2f} ({dept_ppl_total:>2})")
+        else:
+            dept_row.append(f"{dept_totals['Other']:>{col_width}.2f}")
+            dept_row.append(f"{dept_total:>{col_width}.2f}")
         grand_total += dept_total
-        dept_row.append(f"{dept_total:>10.2f}")
 
         print(f"  {'-' * (len(header) - 2)}")
         print(f"  {dept + ' Total':<38} " + " ".join(dept_row))
 
     # Print grand totals
+    # Note: grand_people sums dept people which may double-count people across depts
+    # For accurate grand total people, we'd need to track all unique people separately
     print("\n" + sep_line)
     totals_row = []
+    grand_people_total = sum(grand_people.values())
     for inst in institutions:
-        totals_row.append(f"{grand_totals[inst]:>10.2f}")
-    totals_row.append(f"{grand_totals['Other']:>10.2f}")
-    totals_row.append(f"{grand_total:>10.2f}")
+        if team_people:
+            totals_row.append(f"{grand_totals[inst]:>6.2f} ({grand_people[inst]:>2})")
+        else:
+            totals_row.append(f"{grand_totals[inst]:>{col_width}.2f}")
+    if team_people:
+        totals_row.append(f"{grand_totals['Other']:>6.2f} ({grand_people['Other']:>2})")
+        totals_row.append(f"{grand_total:>6.2f} ({grand_people_total:>2})")
+    else:
+        totals_row.append(f"{grand_totals['Other']:>{col_width}.2f}")
+        totals_row.append(f"{grand_total:>{col_width}.2f}")
     print(f"{'GRAND TOTAL':<40} " + " ".join(totals_row))
     print(sep_line + "\n")
-
-
-def make_team_report(sheet_id, team_sheet, institutions):
-    """
-    Fetch team sheet and generate FTE report.
-
-    Args:
-        sheet_id: Google Sheet ID
-        team_sheet: Name/range of the team sheet
-        institutions: List of institutions to track
-    """
-    print(f"Fetching team data from sheet: {team_sheet}")
-    result = get_sheet(sheet_id, team_sheet)
-    values = result.get('values', [])
-
-    if not values:
-        print("No data found in team sheet.")
-        return
-
-    team_data, dept_teams = process_team_sheet(values, institutions)
-    output_team_report(team_data, dept_teams, institutions)
 
 
 # MAIN
@@ -1645,9 +1830,11 @@ parser.add_argument('sheets', nargs='*',
                             within the google sheet e.g. Model!A1:H""")
 parser.add_argument("--depth", help="make tree pdf stopping at depth ", type=int, default=100)
 parser.add_argument("--land", help="make tree pdf landscape rather than portrait default portrait (1 to make full landscape, 2 mixed)", type=int, default=None)
-parser.add_argument("--team", help="Process team sheet and output FTE summary by institution", action="store_true")
-parser.add_argument("--team-sheet", help="Name of the team sheet (default: 'team')", default="team")
+parser.add_argument("--team", help="Name of the team/staff sheet to process for FTE data")
+parser.add_argument("--nl", help="Name of the NOIRLab staff sheet to process (default: NL!A:Z)", nargs='?', const="NL!A:Z", default=None)
 parser.add_argument("--tree-sheet", help="Name of the tree sheet to process (e.g. 'Model!A1:H')")
+parser.add_argument("--fte-column", help="Column letter for FTE values in team sheet (default: U for FY26)", default="U")
+parser.add_argument("--no-headcount", help="Hide headcount (number of people) in output", action="store_true")
 parser.add_argument("--institutions", help="Comma-separated list of institutions to track (default: SLAC,IN2P3,UK,AURA,UW,Princeton)",
                     default=",".join(DEFAULT_INSTITUTIONS))
 args = parser.parse_args()
@@ -1659,17 +1846,42 @@ institutions = [inst.strip() for inst in args.institutions.split(',')]
 
 team_data = None
 dept_teams = None
+team_people = None
+dept_people = None
 
-# Process team data if --team is specified
+# Process team sheet if --team is specified
 if args.team:
-    print(f"Fetching team data from sheet: {args.team_sheet}")
-    team_result = get_sheet(args.id, args.team_sheet)
+    print(f"Fetching team data from sheet: {args.team}")
+    team_result = get_sheet(args.id, args.team)
     team_values = team_result.get('values', [])
     if team_values:
-        team_data, dept_teams = process_team_sheet(team_values, institutions)
-        # If only --team (no tree sheet), output the FTE report
-        if not args.tree_sheet and not args.sheets:
+        team_data, dept_teams, team_people, dept_people = process_staff_sheet(
+            team_values, institutions, args.fte_column)
+
+    # Process NL sheet if --nl is specified (addition to --team)
+    if args.nl:
+        print(f"Fetching NOIRLab data from sheet: {args.nl}")
+        nl_result = get_sheet(args.id, args.nl)
+        nl_values = nl_result.get('values', [])
+        if nl_values:
+            nl_team_data, nl_dept_teams, nl_team_people, nl_dept_people = process_staff_sheet(
+                nl_values, institutions, args.fte_column)
+            # Debug: show what was loaded from NL sheet
+            print(f"  NL sheet: {len(nl_team_data)} teams in {len(nl_dept_teams)} departments")
+            for team, ftes in nl_team_data.items():
+                total = sum(ftes.values())
+                if total > 0:
+                    print(f"    {team}: {total:.1f} FTE")
+            team_data, dept_teams, team_people, dept_people = merge_staff_data(
+                (team_data, dept_teams, team_people, dept_people),
+                (nl_team_data, nl_dept_teams, nl_team_people, nl_dept_people), institutions)
+
+    # Output report if only --team (no tree sheet)
+    if not args.tree_sheet and not args.sheets:
+        if args.no_headcount:
             output_team_report(team_data, dept_teams, institutions)
+        else:
+            output_team_report(team_data, dept_teams, institutions, team_people, dept_people)
 
 # Process tree if --tree-sheet or positional sheets are specified
 if args.tree_sheet or args.sheets:
@@ -1686,11 +1898,14 @@ if args.tree_sheet or args.sheets:
     else:
         sheets = args.sheets
     
+    # Pass team_people to makeTree only if headcount is enabled
+    show_headcount = not args.no_headcount
     for r in sheets:
         print("Google %s , Sheet %s" % (sheetId, r))
         result = get_sheet(sheetId, r)
         values = result.get('values', [])
-        makeTree(values, team_data, institutions if team_data else None)
+        makeTree(values, team_data, institutions if team_data else None, 
+                 team_people if (team_data and show_headcount) else None)
 elif not args.team:
     parser.error("Either --tree-sheet, sheets argument, or --team is required")
 
