@@ -54,6 +54,9 @@ meta.tex: Makefile .FORCE
 teamreport:
 	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --team  "staff!A:Z"
 
+dmteamtree:
+	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --dept --team "staff!A:Z" --nl "NL!A1:Z5" --tree-sheet teamdiag\!A1:H -o dmteamtree.tex
+	pdflatex dmteamtree.tex
 teamtree:
 	python3 bin/makeProductTree.py 1UZe1Mm5OeHxg-NS2SlSTLaNvRrppARIUGLYJaroXduY --land 2 --team "staff!A:Z" --nl "NL!A1:Z5" --tree-sheet teamdiag\!A1:H 
 	pdflatex TeamTreeLand.tex

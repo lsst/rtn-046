@@ -365,6 +365,26 @@ def get_team_fte_label(orig_name, prod_type=""):
     return ""
 
 
+def get_root_totals_label(node_id):
+    """Get formatted totals label for a root node showing rolled-up FTE and people.
+    
+    Args:
+        node_id: Node identifier to look up in rolled-up totals
+        
+    Returns:
+        String with total FTE and people formatted for LaTeX, or empty string if no data
+    """
+    if not g_rolled_up_totals:
+        return ""
+    
+    total_fte = g_rolled_up_totals.get(node_id, 0)
+    total_people = g_rolled_up_people.get(node_id, 0)
+    
+    if total_fte > 0:
+        return r" \\ \scriptsize " + f"FTE:{total_fte:.1f} People:{total_people}"
+    return ""
+
+
 def get_dept_fte_label(orig_name, prod_type=""):
     """Get formatted department FTE label for a product if dept FTE data is available.
     
@@ -741,6 +761,8 @@ def outputLandMix(fout,ptree):
 
     ### place root node
     team_label = get_team_fte_label(root.orig_name, root.type)
+    if not team_label:
+        team_label = get_root_totals_label(root.id)
     print(r"\node ({p.id}) "
          r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=root,c=child,team_label=team_label),
          file=fout)
@@ -939,6 +961,8 @@ def outputLandR(fout, ptree, pid):
     else:
         ### place root node
         team_label = get_team_fte_label(root.orig_name, root.type)
+        if not team_label:
+            team_label = get_root_totals_label(root.id)
         print(r"\node ({p.id}) "
              r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=root,c=child,team_label=team_label),
              file=fout)
@@ -1050,6 +1074,8 @@ def outputLandR2(fout, ptree, pid, prevd, prevl):
     else:
         ### place root node
         team_label = get_team_fte_label(root.orig_name, root.type)
+        if not team_label:
+            team_label = get_root_totals_label(root.id)
         print(r"\node ({p.id}) "
              r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=root,c=child,team_label=team_label),
              file=fout)
@@ -1297,7 +1323,7 @@ def mixTreeDim(ptree):
     #    if depth == 1:
     return (n2l, nmaxSub)
 
-def makeTree(values, team_data=None, institutions=None, team_people=None, dept_fte=None, dept_people=None):
+def makeTree(values, team_data=None, institutions=None, team_people=None, dept_fte=None, dept_people=None, dept_filter=None, output_file=None):
     """This processes the google sheet produces a tex tree diagram and a tex longtable.
 
     Args:
@@ -1307,6 +1333,8 @@ def makeTree(values, team_data=None, institutions=None, team_people=None, dept_f
         team_people: Optional dict {team_name: {institution: count, ...}, ...} - unique people per team
         dept_fte: Optional dict {department: {institution: FTE_total, ...}, ...} - FTE per department
         dept_people: Optional dict {department: {institution: count, ...}, ...} - unique people per department
+        dept_filter: Optional department name to use as root (filter tree to this subtree)
+        output_file: Optional output filename (overrides default naming)
     """
     global g_team_data, g_institutions, g_team_people, g_dept_fte, g_dept_people
     g_team_data = team_data
@@ -1315,11 +1343,14 @@ def makeTree(values, team_data=None, institutions=None, team_people=None, dept_f
     g_dept_fte = dept_fte
     g_dept_people = dept_people
     
-    # Use TeamTree filename when team data is included
-    base_name = "TeamTree" if team_data else "ProductTree"
-    nf = f"{base_name}.tex"
-    if (land!=None):
-       nf = f"{base_name}Land.tex"
+    # Use TeamTree filename when team data is included, or user-specified output
+    if output_file:
+        nf = output_file
+    else:
+        base_name = "TeamTree" if team_data else "ProductTree"
+        nf = f"{base_name}.tex"
+        if (land!=None):
+           nf = f"{base_name}Land.tex"
     print('Saving product tree in: ', nf)
     nt = "productlist.tex"
 
@@ -1331,6 +1362,22 @@ def makeTree(values, team_data=None, institutions=None, team_people=None, dept_f
     if team_tree_mode:
         calculate_rolled_up_totals(ptree)
         calculate_all_box_heights(ptree)
+
+    # Filter to specific department if requested
+    if dept_filter:
+        # Find the node matching the department name
+        dept_node_id = None
+        for node_id in ptree.expand_tree():
+            node = ptree[node_id]
+            if node.data.orig_name.lower() == dept_filter.lower():
+                dept_node_id = node_id
+                break
+        
+        if dept_node_id:
+            print(f"Filtering tree to department: {dept_filter}")
+            ptree = ptree.subtree(dept_node_id)
+        else:
+            print(f"Warning: Department '{dept_filter}' not found in tree, using full tree")
 
     paperwidth = 0
     height = 0
@@ -1950,6 +1997,9 @@ parser.add_argument("--fte-column", help="Column letter for FTE values in team s
 parser.add_argument("--no-headcount", help="Hide headcount (number of people) in output", action="store_true")
 parser.add_argument("--institutions", help="Comma-separated list of institutions to track (default: SLAC,IN2P3,UK,AURA,UW,Princeton)",
                     default=",".join(DEFAULT_INSTITUTIONS))
+parser.add_argument("--dept", help="Filter tree to show only this department as root (default: Data Management Operations)",
+                    nargs='?', const="Data Management Operations", default=None)
+parser.add_argument("-o", "--output", help="Output filename for the tree (default: TeamTree.tex or ProductTree.tex)")
 args = parser.parse_args()
 outdepth = args.depth
 land = args.land
@@ -2021,7 +2071,8 @@ if args.tree_sheet or args.sheets:
         makeTree(values, team_data, institutions if team_data else None,
                  team_people if (team_data and show_headcount) else None,
                  dept_fte if team_data else None,
-                 dept_people if (team_data and show_headcount) else None)
+                 dept_people if (team_data and show_headcount) else None,
+                 args.dept, args.output)
 elif not args.team:
     parser.error("Either --tree-sheet, sheets argument, or --team is required")
 
