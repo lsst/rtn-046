@@ -44,10 +44,12 @@ outdepth = 100  # set with --depth if you want a shallower tree
 # Global team data for including in tree diagrams
 g_team_data = None  # Dict {team_name: {institution: FTE, ...}, ...}
 g_team_people = None  # Dict {team_name: {institution: count, ...}, ...} - unique people per team
+g_dept_fte = None  # Dict {department: {institution: FTE, ...}, ...} - FTE totals per department
 g_institutions = None  # List of institution names for ordering
 g_rolled_up_totals = {}  # Dict {node_id: total_fte} - rolled up totals for each node
 g_rolled_up_people = {}  # Dict {node_id: total_people} - rolled up headcounts for each node
 g_box_heights = {}  # Dict {node_id: height_in_pt} - calculated box heights for page sizing
+g_dept_people = None  # Dict {department: {institution: count, ...}, ...} - unique people per dept
 
 
 def get_team_total_fte(orig_name):
@@ -124,19 +126,29 @@ def calculate_rolled_up_totals(ptree):
         # Get this node's own FTE and people if it's a Team
         own_fte = 0
         own_people = 0
+        is_dept = prod.type and prod.type.lower() == "department"
         if prod.type and prod.type.lower() == "team":
             own_fte = get_team_total_fte(prod.orig_name)
             own_people = get_team_total_people(prod.orig_name)
-        
-        # Sum children's totals
+        elif is_dept and g_dept_people:
+            # Use pre-computed dept people (set-based, avoids double-counting across teams)
+            name_lower = prod.orig_name.lower()
+            for dept_name, ppl_dict in g_dept_people.items():
+                if dept_name.lower() == name_lower:
+                    own_people = sum(ppl_dict.values())
+                    break
+
+        # Sum children's FTE totals (FTE sums legitimately across teams)
+        # For department nodes, people count comes from g_dept_people (already deduplicated)
         children_total_fte = 0
         children_total_people = 0
         children = ptree.children(node_id)
         for child in children:
             child_fte, child_people = calc_node_total(child.identifier)
             children_total_fte += child_fte
-            children_total_people += child_people
-        
+            if not is_dept:
+                children_total_people += child_people
+
         total_fte = own_fte + children_total_fte
         total_people = own_people + children_total_people
         g_rolled_up_totals[node_id] = total_fte
@@ -163,12 +175,13 @@ def get_rolled_up_total(node_id):
     return g_rolled_up_totals.get(node_id, 0), g_rolled_up_people.get(node_id, 0)
 
 
-def calculate_box_height(prod, has_team_label):
+def calculate_box_height(prod, has_fte_label, fte_data=None):
     """Calculate the minimum height for a box based on content.
     
     Args:
         prod: Product object
-        has_team_label: Whether box has team FTE data
+        has_fte_label: Whether box has FTE data (team or department)
+        fte_data: Dict of {institution: FTE, ...} for the box, if available
         
     Returns:
         Height in pt, or None if default should be used
@@ -181,31 +194,25 @@ def calculate_box_height(prod, has_team_label):
     lines_needed = (name_len + chars_per_line - 1) // chars_per_line  # Ceiling division
     
     # Calculate height based on content
-    if has_team_label:
-        # Team boxes need more height: title + FTE line
+    if has_fte_label and fte_data:
+        # Boxes with FTE labels need more height: title + FTE line
         height = 50 + max(0, (lines_needed - 1) * 12)  # Extra 12pt per wrapped line
         
-        # Check if FTE line will wrap based on actual text length
-        if g_team_data and prod.orig_name:
-            name_lower = prod.orig_name.lower()
-            for team_name, fte_dict in g_team_data.items():
-                if team_name.lower() == name_lower:
-                    # Calculate actual FTE label length
-                    # Format: "INST:X.X(N), " - about 12-15 chars per institution with people
-                    # Box text width is ~44mm which is roughly 25-28 chars
-                    non_zero_count = sum(1 for v in fte_dict.values() if v > 0)
-                    if g_team_people:
-                        # With people counts: "SLAC:2.0(2), " ~13 chars each
-                        chars_per_inst = 13
-                    else:
-                        # Without people counts: "SLAC:2.0, " ~10 chars each
-                        chars_per_inst = 10
-                    total_fte_chars = non_zero_count * chars_per_inst
-                    fte_chars_per_line = 28  # ~44mm text width
-                    fte_lines = (total_fte_chars + fte_chars_per_line - 1) // fte_chars_per_line
-                    if fte_lines > 1:
-                        height += (fte_lines - 1) * 12  # Extra 12pt per wrapped FTE line
-                    break
+        # Calculate actual FTE label length
+        # Format: "INST:X.X(N), " - about 12-15 chars per institution with people
+        # Box text width is ~44mm which is roughly 25-28 chars
+        non_zero_count = sum(1 for v in fte_data.values() if v > 0)
+        if g_team_people and prod.type and prod.type.lower() == "team":
+            # With people counts: "SLAC:2.0(2), " ~13 chars each
+            chars_per_inst = 13
+        else:
+            # Without people counts: "SLAC:2.0, " ~10 chars each
+            chars_per_inst = 10
+        total_fte_chars = non_zero_count * chars_per_inst
+        fte_chars_per_line = 28  # ~44mm text width
+        fte_lines = (total_fte_chars + fte_chars_per_line - 1) // fte_chars_per_line
+        if fte_lines > 1:
+            height += (fte_lines - 1) * 12  # Extra 12pt per wrapped FTE line
     elif lines_needed > 1:
         # Long titles that wrap need more height
         height = base_height + (lines_needed - 1) * 12
@@ -227,8 +234,27 @@ def calculate_all_box_heights(ptree):
     nodes = ptree.expand_tree()
     for n in nodes:
         prod = ptree[n].data
-        has_team_label = bool(get_team_fte_label(prod.orig_name, prod.type)) if g_team_data else False
-        height = calculate_box_height(prod, has_team_label)
+        # Check for team FTE label
+        fte_data = None
+        has_fte_label = False
+        if g_team_data and prod.type:
+            if prod.type.lower() == "team":
+                # Look up team FTE data
+                name_lower = prod.orig_name.lower()
+                for team_name, fte_dict in g_team_data.items():
+                    if team_name.lower() == name_lower:
+                        fte_data = fte_dict
+                        has_fte_label = True
+                        break
+            elif prod.type.lower() == "department" and g_dept_fte:
+                # Look up department FTE data
+                name_lower = prod.orig_name.lower()
+                for dept_name, fte_dict in g_dept_fte.items():
+                    if dept_name.lower() == name_lower:
+                        fte_data = fte_dict
+                        has_fte_label = True
+                        break
+        height = calculate_box_height(prod, has_fte_label, fte_data)
         if height:
             g_box_heights[prod.id] = height
         else:
@@ -337,6 +363,64 @@ def get_team_fte_label(orig_name, prod_type=""):
     if parts:
         return r" \\ \scriptsize " + ", ".join(parts)
     return ""
+
+
+def get_dept_fte_label(orig_name, prod_type=""):
+    """Get formatted department FTE label for a product if dept FTE data is available.
+    
+    Args:
+        orig_name: Original (unescaped) product name to look up in dept data
+        prod_type: Product type - only "Department" types get FTE labels
+        
+    Returns:
+        String with institution FTEs formatted for LaTeX, or empty string if no data
+    """
+    if not g_dept_fte or not g_institutions:
+        return ""
+    
+    # Only add dept FTE info to Department boxes
+    if prod_type.lower() != "department":
+        return ""
+    
+    # Try to find matching department data (case-insensitive match)
+    dept_fte_data = None
+    dept_ppl_data = None
+    name_lower = orig_name.lower()
+    for dept_name, fte_dict in g_dept_fte.items():
+        if dept_name.lower() == name_lower:
+            dept_fte_data = fte_dict
+            # Also get people counts if available
+            if g_dept_people:
+                dept_ppl_data = g_dept_people.get(dept_name, {})
+            break
+    
+    if not dept_fte_data:
+        return ""
+    
+    # Format FTEs for display - include people count if available
+    parts = []
+    for inst in g_institutions:
+        fte = dept_fte_data.get(inst, 0)
+        if fte > 0:
+            if dept_ppl_data:
+                ppl = dept_ppl_data.get(inst, 0)
+                parts.append(f"{inst}:{fte:.1f}({ppl})")
+            else:
+                parts.append(f"{inst}:{fte:.1f}")
+    
+    # Add 'Other' if present
+    other = dept_fte_data.get('Other', 0)
+    if other > 0:
+        if dept_ppl_data:
+            other_ppl = dept_ppl_data.get('Other', 0)
+            parts.append(f"Oth:{other:.1f}({other_ppl})")
+        else:
+            parts.append(f"Oth:{other:.1f}")
+    
+    if parts:
+        return r" \\ \scriptsize " + ", ".join(parts)
+    return ""
+
 
 def get_credentials() -> Credentials:
     """Gets valid user credentials from storage.
@@ -529,6 +613,7 @@ def outputTexTable(tout, ptree):
 def outputType(fout,prod):
     # Add minimum height override for boxes that need more space
     team_label = get_team_fte_label(prod.orig_name, prod.type)
+    dept_label = get_dept_fte_label(prod.orig_name, prod.type)
     box_height = g_box_heights.get(prod.id, 35) if g_box_heights else 35
     if box_height > 35:
         print(f", minimum height={box_height}pt] {{", file=fout, end='')
@@ -537,6 +622,8 @@ def outputType(fout,prod):
     print(r"\textbf{" + prod.name + "} ", file=fout, end='')
     if team_label:
         print(team_label, file=fout, end='')
+    if dept_label:
+        print(dept_label, file=fout, end='')
     print("};", file=fout)
     if prod.type != "":
         # Add total FTE in parentheses - direct for Team, rolled-up for others
@@ -1210,19 +1297,23 @@ def mixTreeDim(ptree):
     #    if depth == 1:
     return (n2l, nmaxSub)
 
-def makeTree(values, team_data=None, institutions=None, team_people=None):
+def makeTree(values, team_data=None, institutions=None, team_people=None, dept_fte=None, dept_people=None):
     """This processes the google sheet produces a tex tree diagram and a tex longtable.
-    
+
     Args:
         values: List of rows from the Google Sheet
         team_data: Optional dict {team_name: {institution: FTE_total, ...}, ...}
         institutions: Optional list of institution names for ordering
         team_people: Optional dict {team_name: {institution: count, ...}, ...} - unique people per team
+        dept_fte: Optional dict {department: {institution: FTE_total, ...}, ...} - FTE per department
+        dept_people: Optional dict {department: {institution: count, ...}, ...} - unique people per department
     """
-    global g_team_data, g_institutions, g_team_people
+    global g_team_data, g_institutions, g_team_people, g_dept_fte, g_dept_people
     g_team_data = team_data
     g_institutions = institutions
     g_team_people = team_people
+    g_dept_fte = dept_fte
+    g_dept_people = dept_people
     
     # Use TeamTree filename when team data is included
     base_name = "TeamTree" if team_data else "ProductTree"
@@ -1514,17 +1605,19 @@ def process_staff_sheet(values, institutions, fte_column='U'):
         fte_column: Column letter for FTE values (default 'U' for FY26)
 
     Returns:
-        tuple: (team_data, dept_teams, team_people, dept_people)
+        tuple: (team_data, dept_teams, team_people, dept_people, dept_fte)
             team_data: {team_name: {institution: FTE_total, ...}, ...}
             dept_teams: {department: [team_name, ...], ...} - preserves order
             team_people: {team_name: {institution: count, ...}, ...} - unique people per team/institution
             dept_people: {department: {institution: count, ...}, ...} - unique people per dept/institution
+            dept_fte: {department: {institution: FTE_total, ...}, ...} - FTE totals per dept/institution
     """
     # Convert column letter to index (A=0, B=1, etc.)
     fte_col_idx = ord(fte_column.upper()) - ord('A')
 
     team_data = {}
     dept_teams = {}  # Maps department to list of teams (in order)
+    dept_fte = {}  # Maps department to {institution: FTE_total, ...}
     
     # Track unique people per team per institution
     team_people_set = {}  # {team_name: {institution: set(person_names), ...}, ...}
@@ -1590,13 +1683,17 @@ def process_staff_sheet(values, institutions, fte_column='U'):
             team_people_set[team_name] = {inst: set() for inst in institutions}
             team_people_set[team_name]['Other'] = set()
 
-        # Initialize department people tracking if not seen
+        # Initialize department tracking if not seen
         if dept_cell not in dept_people_set:
             dept_people_set[dept_cell] = {inst: set() for inst in institutions}
             dept_people_set[dept_cell]['Other'] = set()
+        if dept_cell not in dept_fte:
+            dept_fte[dept_cell] = {inst: 0.0 for inst in institutions}
+            dept_fte[dept_cell]['Other'] = 0.0
 
-        # Add FTE to the appropriate institution
+        # Add FTE to the appropriate institution (team and department level)
         team_data[team_name][institution] += fte
+        dept_fte[dept_cell][institution] += fte
 
         # Track unique person for this team and institution
         if person_name:
@@ -1613,22 +1710,22 @@ def process_staff_sheet(values, institutions, fte_column='U'):
     for dept, inst_sets in dept_people_set.items():
         dept_people[dept] = {inst: len(names) for inst, names in inst_sets.items()}
 
-    return team_data, dept_teams, team_people, dept_people
+    return team_data, dept_teams, team_people, dept_people, dept_fte
 
 
 def merge_staff_data(base_data, new_data, institutions):
     """Merge staff data from two sheets into one set of dictionaries.
     
     Args:
-        base_data: Tuple (team_data, dept_teams, team_people, dept_people) from first sheet
-        new_data: Tuple (team_data, dept_teams, team_people, dept_people) from second sheet
+        base_data: Tuple (team_data, dept_teams, team_people, dept_people, dept_fte) from first sheet
+        new_data: Tuple (team_data, dept_teams, team_people, dept_people, dept_fte) from second sheet
         institutions: List of institution names
         
     Returns:
-        Merged tuple (team_data, dept_teams, team_people, dept_people)
+        Merged tuple (team_data, dept_teams, team_people, dept_people, dept_fte)
     """
-    base_team_data, base_dept_teams, base_team_people, base_dept_people = base_data
-    new_team_data, new_dept_teams, new_team_people, new_dept_people = new_data
+    base_team_data, base_dept_teams, base_team_people, base_dept_people, base_dept_fte = base_data
+    new_team_data, new_dept_teams, new_team_people, new_dept_people, new_dept_fte = new_data
     
     # Merge team_data - add FTEs for same teams
     for team_name, fte_dict in new_team_data.items():
@@ -1686,7 +1783,23 @@ def merge_staff_data(base_data, new_data, institutions):
                 for inst, count in ppl_dict.items():
                     base_dept_people[dept][inst] = count
     
-    return base_team_data, base_dept_teams, base_team_people, base_dept_people
+    # Merge dept_fte - add FTEs for same departments
+    if new_dept_fte:
+        if base_dept_fte is None:
+            base_dept_fte = {}
+        for dept, fte_dict in new_dept_fte.items():
+            if dept in base_dept_fte:
+                # Add FTEs to existing department
+                for inst, fte in fte_dict.items():
+                    base_dept_fte[dept][inst] = base_dept_fte[dept].get(inst, 0.0) + fte
+            else:
+                # New department
+                base_dept_fte[dept] = {inst: 0.0 for inst in institutions}
+                base_dept_fte[dept]['Other'] = 0.0
+                for inst, fte in fte_dict.items():
+                    base_dept_fte[dept][inst] = fte
+    
+    return base_team_data, base_dept_teams, base_team_people, base_dept_people, base_dept_fte
 
 
 def output_team_report(team_data, dept_teams, institutions, team_people=None, dept_people=None):
@@ -1848,6 +1961,7 @@ team_data = None
 dept_teams = None
 team_people = None
 dept_people = None
+dept_fte = None
 
 # Process team sheet if --team is specified
 if args.team:
@@ -1855,7 +1969,7 @@ if args.team:
     team_result = get_sheet(args.id, args.team)
     team_values = team_result.get('values', [])
     if team_values:
-        team_data, dept_teams, team_people, dept_people = process_staff_sheet(
+        team_data, dept_teams, team_people, dept_people, dept_fte = process_staff_sheet(
             team_values, institutions, args.fte_column)
 
     # Process NL sheet if --nl is specified (addition to --team)
@@ -1864,7 +1978,7 @@ if args.team:
         nl_result = get_sheet(args.id, args.nl)
         nl_values = nl_result.get('values', [])
         if nl_values:
-            nl_team_data, nl_dept_teams, nl_team_people, nl_dept_people = process_staff_sheet(
+            nl_team_data, nl_dept_teams, nl_team_people, nl_dept_people, nl_dept_fte = process_staff_sheet(
                 nl_values, institutions, args.fte_column)
             # Debug: show what was loaded from NL sheet
             print(f"  NL sheet: {len(nl_team_data)} teams in {len(nl_dept_teams)} departments")
@@ -1872,9 +1986,9 @@ if args.team:
                 total = sum(ftes.values())
                 if total > 0:
                     print(f"    {team}: {total:.1f} FTE")
-            team_data, dept_teams, team_people, dept_people = merge_staff_data(
-                (team_data, dept_teams, team_people, dept_people),
-                (nl_team_data, nl_dept_teams, nl_team_people, nl_dept_people), institutions)
+            team_data, dept_teams, team_people, dept_people, dept_fte = merge_staff_data(
+                (team_data, dept_teams, team_people, dept_people, dept_fte),
+                (nl_team_data, nl_dept_teams, nl_team_people, nl_dept_people, nl_dept_fte), institutions)
 
     # Output report if only --team (no tree sheet)
     if not args.tree_sheet and not args.sheets:
@@ -1904,8 +2018,10 @@ if args.tree_sheet or args.sheets:
         print("Google %s , Sheet %s" % (sheetId, r))
         result = get_sheet(sheetId, r)
         values = result.get('values', [])
-        makeTree(values, team_data, institutions if team_data else None, 
-                 team_people if (team_data and show_headcount) else None)
+        makeTree(values, team_data, institutions if team_data else None,
+                 team_people if (team_data and show_headcount) else None,
+                 dept_fte if team_data else None,
+                 dept_people if (team_data and show_headcount) else None)
 elif not args.team:
     parser.error("Either --tree-sheet, sheets argument, or --team is required")
 
