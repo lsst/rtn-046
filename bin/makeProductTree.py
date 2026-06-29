@@ -1631,7 +1631,7 @@ def tfooter(tout):
 
 
 
-DEFAULT_INSTITUTIONS = ['SLAC', 'IN2P3', 'UK', 'AURA', 'UW', 'Princeton']
+DEFAULT_INSTITUTIONS = ['SLAC', 'IN2P3', 'UK', 'AURA', 'UW', 'Princeton', 'NCSA']
 
 
 def process_staff_sheet(values, institutions, fte_column='U'):
