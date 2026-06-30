@@ -1,11 +1,11 @@
 \section{Project Controls} \label{sec:control}
 DM operations tracks work and milestones in Jira following \citeds{RTN-005}.
 
-Risk management folows the Operations risk management plan \citedsp{rdo-71}.
+Risk management follows the Operations risk management plan \citedsp{rdo-71}.
 
 Security is covered in \cite{RTN-030}.
 
-Disaster recovery is civered in various documents:
+Disaster recovery is covered in various documents:
 
 \begin{itemize}
 \item \citeds{ITTN-058} covers Disaster Recovery for Infrastructure Support Devices
@@ -14,8 +14,62 @@ Disaster recovery is civered in various documents:
 \end{itemize}
 
 
+\subsection{DM Change Control Board \label{sect:dmccb}}
+
+The DMCCB has responsibility for issues similar to those of the Rubin Change Control Board, but focused on the DM Subsystem.
+The DMCCB reviews and approves changes to all baselines in the Subsystem, including proposed changes to any change controlled documents.
+This is done via the RFC mechanism.
+The Technical Baseline, including software/hardware and documentation, is produced by DM and controlled by the DMCCB.
+DMCCB validates that the form and content of the Technical Baseline is consistent with Rubin project standards.
+See also \url{https://rubinobs.atlassian.net/wiki/spaces/DM/pages/48828899/DMCCB}
+
+
+All RFCs that imply one of the following changes:
+
+\begin{itemize}
+\item Changes to controlled documents
+\item API changes to the codebase, including deprecation
+\item Data model changes
+\end{itemize}
+
+need to be \textit{flagged} and therefore approved by the DMCCB, as detailed in the \href{https://developer.lsst.io/communications/rfc.html#rfc-exceptions}{Developer Guide}.
+
+The DMCCB will meet virtually, every week for 30 minutes. Agenda will be available beforehand.
+Urgent decisions can be taken offline, outside the weekly meeting, in a modality to be defined by the DMCCB itself (currently Slack channel).
+
+
+\begin{itemize}
+\item Responsibilities:
+        \begin{itemize}
+        \item Review and approve/reject proposed changes to baselined items - any Rubin Change Request must go through the DMCCB before being submitted to the project CCB.
+        \item Review all RFCs and approves \textit{flagged} RFCs prior to 'Adoption'
+        \item Monitor and approve DM software releases
+        \item Monitor the status of issues in the DM project on Jira
+        \item Ensure that the DM follows Rubin and DM configuration control processes.
+        \end{itemize}
+\item Membership:
+        \begin{itemize}
+        \item Core members:
+                \begin{itemize}
+                \item Chair Tim Jenness.
+                \item DMAD
+                \item DMS and/or Deputy DMS
+                \item USDF representative
+                \item Release Managers
+                \end{itemize}
+        \item Optional members (required when topics to discuss are relevant to their areas of expertise):
+                \begin{itemize}
+                \item Team Leads, who can delegate as needed % e.g.Jim Bosch for pipelines
+		\item Any team member who wishes to discuss an RFC or ticket.
+                \end{itemize}
+        \item For on-line virtual meetings, if a consensus or quorum is not reached within one week, the DMAD will make a unilateral decision
+        \item DMAD can also make unilateral decisions in cases of urgency. In that case DMCCB will assess the change \textit{a posteriori}.
+        \end{itemize}
+\end{itemize}
+
+
 \subsection{Work Breakdown Structure} \label{sec:wbs}
-Table \tabref{tab:dmwbs} gives the WBS structure for DM in operaitons.
+Table \tabref{tab:dmwbs} gives the WBS structure for DM in operations.
 
 \input{tables/dmwbs}
 

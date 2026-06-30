@@ -8,21 +8,21 @@
 \usepackage{tikz,hyperref,amsmath}
 \usetikzlibrary{positioning,arrows,shapes,decorations.shapes,shapes.arrows}
 \usetikzlibrary{backgrounds,calc}
-\usepackage[paperwidth=30.6cm,paperheight=174.1cm,
+\usepackage[paperwidth=39.0cm,paperheight=172.55cm,
 left=-2mm,top=3mm,bottom=0mm,right=0mm,
 noheadfoot,marginparwidth=0pt,includemp=false,
 textwidth=30cm,textheight=50mm]{geometry}
 \newcommand\showpage{%
 \setlayoutscale{0.5}\setlabelfont{\tiny}\printheadingsfalse\printparametersfalse
 \currentpage\pagedesign}
-\hypersetup{pdftitle={DM products }, pdfsubject={Diagram illustrating the
-products in LSST DM }, pdfauthor={ William O'Mullane}}
+\hypersetup{pdftitle={DM products}, pdfsubject={Diagram illustrating the products in LSST DM}, pdfauthor={ William O'Mullane}}
 \tikzstyle{tbox}=[rectangle,text centered, text width=30mm]
 \tikzstyle{wbbox}=[rectangle, rounded corners=3pt, draw=black, top color=blue!50!white, bottom color=white, very thick, minimum height=12mm, inner sep=2pt, text centered, text width=30mm]
-\tikzstyle{pbox}=[rectangle, rounded corners=3pt, draw=black, top color=yellow!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=35mm]
-\tikzstyle{abox}=[rectangle, rounded corners=3pt, draw=black, top color=green!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=35mm]
-\tikzstyle{tbox}=[rectangle, rounded corners=3pt, draw=black, top color=blue!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=35mm]
-\tikzstyle{gbox}=[rectangle, rounded corners=3pt, draw=black, top color=cyan!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=2pt, text centered, text width=35mm]
+\tikzstyle{dbox}=[rectangle, rounded corners=3pt, draw=black, top color=green!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=3pt, text centered, text width=45mm]
+\tikzstyle{pbox}=[rectangle, rounded corners=3pt, draw=black, top color=yellow!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=3pt, text centered, text width=35mm]
+\tikzstyle{abox}=[rectangle, rounded corners=3pt, draw=black, top color=green!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=3pt, text centered, text width=35mm]
+\tikzstyle{tbox}=[rectangle, rounded corners=3pt, draw=black, top color=blue!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=3pt, text centered, text width=44mm]
+\tikzstyle{gbox}=[rectangle, rounded corners=3pt, draw=black, top color=cyan!50!white, bottom color=white, very thick, minimum height=35pt, inner sep=3pt, text centered, text width=45mm]
 \tikzstyle{pline}=[-, thick]
 \begin{document}
 \begin{tikzpicture}[node distance=0mm]
@@ -30,11 +30,11 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (1-DA) [gbox,right=15mm of 0-DM] {\textbf{Data Abstraction} };
 \node [below right] at (1-DA.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DA.west); 
-\node (2-Build) [abox,right=15mm of 1-DA] {\textbf{Build Engineering} };
-\node [below right] at (2-Build.north west) {\small \color{blue}Activity} ;
+\node (2-Build) [tbox,right=15mm of 1-DA] {\textbf{Build Engineering} };
+\node [below right] at (2-Build.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-Build.west); 
-\node (2-DataEng) [abox,below=4pt of 2-Build] {\textbf{Data Eng} };
-\node [below right] at (2-DataEng.north west) {\small \color{blue}Activity} ;
+\node (2-DataEng) [tbox,below=4pt of 2-Build] {\textbf{Data Eng} };
+\node [below right] at (2-DataEng.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-DataEng.west); 
 \node (3-felis) [pbox,right=15mm of 2-DataEng] {\textbf{Felis} };
 \node [below right] at (3-felis.north west) {\small \color{blue}Product} ;
@@ -42,8 +42,8 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-meta) [abox,below=4pt of 3-felis] {\textbf{Metadata} };
 \node [below right] at (3-meta.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-DataEng.east) -| ++(0.4,0) |- (3-meta.west); 
-\node (2-Middle) [abox,below=45pt of 2-DataEng] {\textbf{Pipe Middleware} };
-\node [below right] at (2-Middle.north west) {\small \color{blue}Activity} ;
+\node (2-Middle) [tbox,below=46pt of 2-DataEng] {\textbf{Pipe Middleware} };
+\node [below right] at (2-Middle.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DA.east) -| ++(0.4,0) |- (2-Middle.west); 
 \node (2-SingleExec) [pbox,right=15mm of 2-Middle] {\textbf{Sis Exec} };
 \node [below right] at (2-SingleExec.north west) {\small \color{blue}Product} ;
@@ -90,7 +90,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (s3daemon) [pbox,below=4pt of 4-sattle] {\textbf{s3daemon} };
 \node [below right] at (s3daemon.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-prompt.east) -| ++(0.4,0) |- (s3daemon.west); 
-\node (3-bps) [pbox,below=496pt of 2-SingleExec] {\textbf{BPS} };
+\node (3-bps) [pbox,below=508pt of 2-SingleExec] {\textbf{BPS} };
 \node [below right] at (3-bps.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Middle.east) -| ++(0.4,0) |- (3-bps.west); 
 \node (3-butler) [pbox,below=4pt of 3-bps] {\textbf{Butler} };
@@ -108,7 +108,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-ubat) [pbox,below=4pt of 4-cmp] {\textbf{user batch envelope} };
 \node [below right] at (4-ubat.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-ctrl.east) -| ++(0.4,0) |- (4-ubat.west); 
-\node (3-spinter) [pbox,below=86pt of 3-ctrl] {\textbf{Pipeline interfaces} };
+\node (3-spinter) [pbox,below=88pt of 3-ctrl] {\textbf{Pipeline interfaces} };
 \node [below right] at (3-spinter.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Middle.east) -| ++(0.4,0) |- (3-spinter.west); 
 \node (4-pex) [pbox,right=15mm of 3-spinter] {\textbf{pex\_config} };
@@ -117,10 +117,10 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-pip) [pbox,below=4pt of 4-pex] {\textbf{pipe\_base} };
 \node [below right] at (4-pip.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-spinter.east) -| ++(0.4,0) |- (4-pip.west); 
-\node (EUPS) [pbox,below=45pt of 3-spinter] {\textbf{EUPS} };
+\node (EUPS) [pbox,below=46pt of 3-spinter] {\textbf{EUPS} };
 \node [below right] at (EUPS.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Middle.east) -| ++(0.4,0) |- (EUPS.west); 
-\node (1-DAL) [gbox,below=947pt of 1-DA] {\textbf{Chile \&  LHN} };
+\node (1-DAL) [gbox,below=970pt of 1-DA] {\textbf{Chile \&  LHN} };
 \node [below right] at (1-DAL.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DAL.west); 
 \node (2-CDevOps) [tbox,right=15mm of 1-DAL] {\textbf{Chile DevOps} };
@@ -129,7 +129,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (2-LHN) [pbox,below=4pt of 2-CDevOps] {\textbf{LHN} };
 \node [below right] at (2-LHN.north west) {\small \color{blue}Product} ;
  \draw[pline] (1-DAL.east) -| ++(0.4,0) |- (2-LHN.west); 
-\node (1-DF) [gbox,below=45pt of 1-DAL] {\textbf{Data Facilities} };
+\node (1-DF) [gbox,below=46pt of 1-DAL] {\textbf{Data Facilities} };
 \node [below right] at (1-DF.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DF.west); 
 \node (2-Curation) [tbox,right=15mm of 1-DF] {\textbf{Data Curation} };
@@ -186,31 +186,25 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (OODS) [pbox,below=4pt of 3-xfersu] {\textbf{OODS} };
 \node [below right] at (OODS.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Curation.east) -| ++(0.4,0) |- (OODS.west); 
-\node (2-FrDF) [gbox,below=660pt of 2-Curation] {\textbf{FrDF} };
+\node (2-FrDF) [gbox,below=676pt of 2-Curation] {\textbf{FrDF} };
 \node [below right] at (2-FrDF.north west) {\small \color{blue}Group} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-FrDF.west); 
-\node (2-Infra) [tbox,below=4pt of 2-FrDF] {\textbf{Infrastructures} };
-\node [below right] at (2-Infra.north west) {\small \color{blue}Team} ;
- \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-Infra.west); 
-\node (3-cdac) [tbox,right=15mm of 2-Infra] {\textbf{CDAC} };
-\node [below right] at (3-cdac.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-cdac.west); 
-\node (3-frdf) [tbox,below=4pt of 3-cdac] {\textbf{FrDF} };
+\node (3-frdf) [tbox,right=15mm of 2-FrDF] {\textbf{FrDF} };
 \node [below right] at (3-frdf.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-frdf.west); 
-\node (3-sdf) [tbox,below=4pt of 3-frdf] {\textbf{SDF} };
-\node [below right] at (3-sdf.north west) {\small \color{blue}Team} ;
+ \draw[pline] (2-FrDF.east) -| ++(0.4,0) |- (3-frdf.west); 
+\node (2-Infra) [gbox,below=4pt of 2-FrDF] {\textbf{Infrastructures} };
+\node [below right] at (2-Infra.north west) {\small \color{blue}Group} ;
+ \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-Infra.west); 
+\node (3-cdac) [pbox,right=15mm of 2-Infra] {\textbf{CDAC} };
+\node [below right] at (3-cdac.north west) {\small \color{blue}Product} ;
+ \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-cdac.west); 
+\node (3-sdf) [pbox,below=4pt of 3-cdac] {\textbf{SDF} };
+\node [below right] at (3-sdf.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-sdf.west); 
-\node (3-ukdf) [tbox,below=4pt of 3-sdf] {\textbf{UKDF} };
-\node [below right] at (3-ukdf.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-ukdf.west); 
-\node (3-usdf) [tbox,below=4pt of 3-ukdf] {\textbf{USDF} };
-\node [below right] at (3-usdf.north west) {\small \color{blue}Team} ;
- \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (3-usdf.west); 
-\node (tembargo) [pbox,below=4pt of 3-usdf] {\textbf{trans embargo} };
+\node (tembargo) [pbox,below=4pt of 3-sdf] {\textbf{trans embargo} };
 \node [below right] at (tembargo.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Infra.east) -| ++(0.4,0) |- (tembargo.west); 
-\node (2-MultiExec) [abox,below=209pt of 2-Infra] {\textbf{Multi-site \&  User Exec} };
+\node (2-MultiExec) [abox,below=88pt of 2-Infra] {\textbf{Multi-site \&  User Exec} };
 \node [below right] at (2-MultiExec.north west) {\small \color{blue}Activity} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-MultiExec.west); 
 \node (3-Panda) [pbox,right=15mm of 2-MultiExec] {\textbf{PanDA} };
@@ -222,16 +216,25 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-UWS) [pbox,right=15mm of 3-ubatch] {\textbf{UWS} };
 \node [below right] at (4-UWS.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-ubatch.east) -| ++(0.4,0) |- (4-UWS.west); 
-\node (2-UKDF) [gbox,below=45pt of 2-MultiExec] {\textbf{UKDF} };
+\node (2-UKDF) [gbox,below=46pt of 2-MultiExec] {\textbf{UKDF} };
 \node [below right] at (2-UKDF.north west) {\small \color{blue}Group} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-UKDF.west); 
+\node (3-ukdf) [tbox,right=15mm of 2-UKDF] {\textbf{UKDF} };
+\node [below right] at (3-ukdf.north west) {\small \color{blue}Team} ;
+ \draw[pline] (2-UKDF.east) -| ++(0.4,0) |- (3-ukdf.west); 
 \node (2-USDF) [gbox,below=4pt of 2-UKDF] {\textbf{USDF} };
 \node [below right] at (2-USDF.north west) {\small \color{blue}Group} ;
  \draw[pline] (1-DF.east) -| ++(0.4,0) |- (2-USDF.west); 
 \node (2-stackm) [abox,right=15mm of 2-USDF] {\textbf{Stack maint} };
 \node [below right] at (2-stackm.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-USDF.east) -| ++(0.4,0) |- (2-stackm.west); 
-\node (1-DMSCI) [gbox,below=1111pt of 1-DF] {\textbf{DM Science} };
+\node (3-usdf) [tbox,below=4pt of 2-stackm] {\textbf{USDF} };
+\node [below right] at (3-usdf.north west) {\small \color{blue}Team} ;
+ \draw[pline] (2-USDF.east) -| ++(0.4,0) |- (3-usdf.west); 
+\node (1-DMM) [tbox,below=1054pt of 1-DF] {\textbf{DM Managent} };
+\node [below right] at (1-DMM.north west) {\small \color{blue}Team} ;
+ \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DMM.west); 
+\node (1-DMSCI) [gbox,below=4pt of 1-DMM] {\textbf{DM Science} };
 \node [below right] at (1-DMSCI.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DMSCI.west); 
 \node (2-CST) [tbox,right=15mm of 1-DMSCI] {\textbf{CST} };
@@ -252,7 +255,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-NBS) [abox,below=4pt of 3-INT] {\textbf{NB support} };
 \node [below right] at (3-NBS.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-CST.east) -| ++(0.4,0) |- (3-NBS.west); 
-\node (1-DP) [gbox,below=168pt of 1-DMSCI] {\textbf{Data Production} };
+\node (1-DP) [gbox,below=172pt of 1-DMSCI] {\textbf{Data Production} };
 \node [below right] at (1-DP.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DP.west); 
 \node (2-Camp) [tbox,right=15mm of 1-DP] {\textbf{Campaign Management} };
@@ -297,7 +300,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (3-voms) [pbox,below=4pt of 3-sasusdf] {\textbf{VOMS} };
 \node [below right] at (3-voms.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-Camp.east) -| ++(0.4,0) |- (3-voms.west); 
-\node (2-SciPip) [tbox,below=496pt of 2-Camp] {\textbf{Algorithms \&  Pipelines} };
+\node (2-SciPip) [tbox,below=508pt of 2-Camp] {\textbf{Algorithms \&  Pipelines} };
 \node [below right] at (2-SciPip.north west) {\small \color{blue}Team} ;
  \draw[pline] (1-DP.east) -| ++(0.4,0) |- (2-SciPip.west); 
 \node (3-Cal) [abox,right=15mm of 2-SciPip] {\textbf{Calibration} };
@@ -354,7 +357,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-sdbrep) [abox,below=4pt of 4-schedstat] {\textbf{Summit DB Repl} };
 \node [below right] at (4-sdbrep.north west) {\small \color{blue}Activity} ;
  \draw[pline] (3-SDQA.east) -| ++(0.4,0) |- (4-sdbrep.west); 
-\node (1-DS) [gbox,below=1152pt of 1-DP] {\textbf{Data Services} };
+\node (1-DS) [gbox,below=1180pt of 1-DP] {\textbf{Data Services} };
 \node [below right] at (1-DS.north west) {\small \color{blue}Group} ;
  \draw[pline] (0-DM.east) -| ++(0.4,0) |- (1-DS.west); 
 \node (2-CompDb) [tbox,right=15mm of 1-DS] {\textbf{Complex. DB} };
@@ -369,10 +372,10 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-Qserv) [pbox,below=4pt of 4-PromptDB] {\textbf{Qserv} };
 \node [below right] at (4-Qserv.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-BigDB.east) -| ++(0.4,0) |- (4-Qserv.west); 
-\node (3-uDB) [abox,below=45pt of 3-BigDB] {\textbf{User Databases} };
+\node (3-uDB) [abox,below=46pt of 3-BigDB] {\textbf{User Databases} };
 \node [below right] at (3-uDB.north west) {\small \color{blue}Activity} ;
  \draw[pline] (2-CompDb.east) -| ++(0.4,0) |- (3-uDB.west); 
-\node (2-Octav) [pbox,below=86pt of 2-CompDb] {\textbf{Octavius} };
+\node (2-Octav) [pbox,below=88pt of 2-CompDb] {\textbf{Octavius} };
 \node [below right] at (2-Octav.north west) {\small \color{blue}Product} ;
  \draw[pline] (1-DS.east) -| ++(0.4,0) |- (2-Octav.west); 
 \node (2-SQuaRE) [tbox,below=4pt of 2-Octav] {\textbf{SQuaRE} };
@@ -390,7 +393,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-templ) [pbox,below=4pt of 4-ltd] {\textbf{Templating} };
 \node [below right] at (4-templ.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-Doc.east) -| ++(0.4,0) |- (4-templ.west); 
-\node (3-Phal) [pbox,below=86pt of 3-Doc] {\textbf{Phalanx} };
+\node (3-Phal) [pbox,below=88pt of 3-Doc] {\textbf{Phalanx} };
 \node [below right] at (3-Phal.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SQuaRE.east) -| ++(0.4,0) |- (3-Phal.west); 
 \node (4-auth) [abox,right=15mm of 3-Phal] {\textbf{Authorisation} };
@@ -405,7 +408,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (POCS) [pbox,below=4pt of 4-secret] {\textbf{Planned Obs.} };
 \node [below right] at (POCS.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-Phal.east) -| ++(0.4,0) |- (POCS.west); 
-\node (3-RSP) [pbox,below=127pt of 3-Phal] {\textbf{RSP} };
+\node (3-RSP) [pbox,below=130pt of 3-Phal] {\textbf{RSP} };
 \node [below right] at (3-RSP.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SQuaRE.east) -| ++(0.4,0) |- (3-RSP.west); 
 \node (4-api) [pbox,right=15mm of 3-RSP] {\textbf{APIs} };
@@ -429,7 +432,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-support) [pbox,below=4pt of 4-sqrone] {\textbf{User Support} };
 \node [below right] at (4-support.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-RSP.east) -| ++(0.4,0) |- (4-support.west); 
-\node (3-Sasq) [pbox,below=250pt of 3-RSP] {\textbf{Sasquatch} };
+\node (3-Sasq) [pbox,below=256pt of 3-RSP] {\textbf{Sasquatch} };
 \node [below right] at (3-Sasq.north west) {\small \color{blue}Product} ;
  \draw[pline] (2-SQuaRE.east) -| ++(0.4,0) |- (3-Sasq.west); 
 \node (4-efd) [pbox,right=15mm of 3-Sasq] {\textbf{EFD} };
@@ -441,7 +444,7 @@ products in LSST DM }, pdfauthor={ William O'Mullane}}
 \node (4-telgw) [pbox,below=4pt of 4-metric] {\textbf{Telemetry Gateway} };
 \node [below right] at (4-telgw.north west) {\small \color{blue}Product} ;
  \draw[pline] (3-Sasq.east) -| ++(0.4,0) |- (4-telgw.west); 
-\node (2-qserv) [pbox,below=660pt of 2-SQuaRE] {\textbf{QServ} };
+\node (2-qserv) [pbox,below=676pt of 2-SQuaRE] {\textbf{QServ} };
 \node [below right] at (2-qserv.north west) {\small \color{blue}Product} ;
  \draw[pline] (1-DS.east) -| ++(0.4,0) |- (2-qserv.west); 
 \node (2-rsp) [pbox,below=4pt of 2-qserv] {\textbf{RSP} };
