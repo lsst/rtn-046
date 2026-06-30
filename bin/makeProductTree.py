@@ -437,7 +437,15 @@ def get_dept_fte_label(orig_name, prod_type=""):
         else:
             parts.append(f"Oth:{other:.1f}")
     
+    # Calculate and add totals
+    total_fte = sum(dept_fte_data.values())
+    total_ppl = sum(dept_ppl_data.values()) if dept_ppl_data else 0
+    
     if parts:
+        if dept_ppl_data:
+            parts.append(f"Tot:{total_fte:.1f}({total_ppl})")
+        else:
+            parts.append(f"Tot:{total_fte:.1f}")
         return r" \\ \scriptsize " + ", ".join(parts)
     return ""
 
@@ -762,6 +770,8 @@ def outputLandMix(fout,ptree):
     ### place root node
     team_label = get_team_fte_label(root.orig_name, root.type)
     if not team_label:
+        team_label = get_dept_fte_label(root.orig_name, root.type)
+    if not team_label:
         team_label = get_root_totals_label(root.id)
     print(r"\node ({p.id}) "
          r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=root,c=child,team_label=team_label),
@@ -962,6 +972,8 @@ def outputLandR(fout, ptree, pid):
         ### place root node
         team_label = get_team_fte_label(root.orig_name, root.type)
         if not team_label:
+            team_label = get_dept_fte_label(root.orig_name, root.type)
+        if not team_label:
             team_label = get_root_totals_label(root.id)
         print(r"\node ({p.id}) "
              r"[wbbox, above=15mm of {c.id}]{{\textbf{{{p.name}}}{team_label}}};".format(p=root,c=child,team_label=team_label),
@@ -1074,6 +1086,8 @@ def outputLandR2(fout, ptree, pid, prevd, prevl):
     else:
         ### place root node
         team_label = get_team_fte_label(root.orig_name, root.type)
+        if not team_label:
+            team_label = get_dept_fte_label(root.orig_name, root.type)
         if not team_label:
             team_label = get_root_totals_label(root.id)
         print(r"\node ({p.id}) "
@@ -1249,6 +1263,10 @@ def outputTexTreeP(fout, ptree, width, sib, full):
             if (count == 1 ):  # root node
                 if full ==1:
                    team_label = get_team_fte_label(prod.orig_name, prod.type)
+                   if not team_label:
+                       team_label = get_dept_fte_label(prod.orig_name, prod.type)
+                   if not team_label:
+                       team_label = get_root_totals_label(prod.id)
                    print(r"\node ({p.id}) "
                       r"[wbbox]{{\textbf{{{p.name}}}{team_label}}};".format(p=prod,team_label=team_label),
                       file=fout)
