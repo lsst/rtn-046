@@ -7,6 +7,8 @@ tex = $(filter-out $(wildcard *acronyms.tex) , $(wildcard *.tex))
 GITVERSION := $(shell git log -1 --date=short --pretty=%h)
 GITDATE := $(shell git log -1 --date=short --pretty=%ad)
 GITSTATUS := $(shell git status --porcelain)
+JIRA_USER='rubinjiraapiaccess@gmail.com'
+
 ifneq "$(GITSTATUS)" ""
 	GITDIRTY = -dirty
 endif
@@ -20,9 +22,11 @@ $(DOCNAME).pdf: $(tex) meta.tex local.bib acronyms.tex
 #	xelatex $(DOCNAME)
 # For glossary uncomment the 2 lines above
 
+	
 gdepend:
 	pip install --upgrade pip
 	pip install --upgrade -r requirements.txt
+	pip install --upgrade -r operations_milestones/requirements.txt
 
 # Acronym tool allows for selection of acronyms based on tags - you may want more than DM
 acronyms.tex: $(tex) myacronyms.txt
@@ -73,4 +77,7 @@ tree:
 # https://docs.google.com/spreadsheets/d/1KAmk2NcSFknXiqbwMekaHkTQOzZ6RUAgt7_tqvBi1HM/edit?gid=717068729#gid=717068729
 tables: .FORCE
 	cd tables; makeTablesFromGoogle.py 1KAmk2NcSFknXiqbwMekaHkTQOzZ6RUAgt7_tqvBi1HM DMops\!A1:F
+
+milestones: .FORCE
+	python3 operations_milestones/opsMiles.py -ls -u ${JIRA_USER} -p "${JIRA_PASSWORD}"
 
