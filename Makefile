@@ -79,5 +79,5 @@ tables: .FORCE
 	cd tables; makeTablesFromGoogle.py 1KAmk2NcSFknXiqbwMekaHkTQOzZ6RUAgt7_tqvBi1HM DMops\!A1:F
 
 milestones: .FORCE
-	python3 operations_milestones/opsMiles.py -ls -u ${JIRA_USER} -p "${JIRA_PASSWORD}"
+	python3 operations_milestones/opsMiles.py -f openMilestones -l -u ${JIRA_USER} -p "${JIRA_PASSWORD}" -q "filter=11161"
 

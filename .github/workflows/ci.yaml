@@ -38,7 +38,13 @@ jobs:
         run: |
           echo $CLIENT >> client_secret.json
           ./decrypt_secret.sh
-          docker run --rm -v `pwd`:/workspace -w /workspace lsstsqre/lsst-texmf:latest sh -c 'make gdepend milestones tree dmteamtree teamtree tables  RTN-046.pdf'
+          docker run --rm \
+            -e JIRA_USER \
+            -e JIRA_PASSWORD \
+            -v `pwd`:/workspace \
+            -w /workspace \
+            lsstsqre/lsst-texmf:latest \
+            sh -c 'make gdepend milestones tree dmteamtree teamtree tables RTN-046.pdf'
 
       - name: Landing page upload
         if: ${{ github.event_name == 'push' }}
